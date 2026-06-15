@@ -15,7 +15,8 @@ Publishes work-in-progress experiments, AI tooling, and Zenn articles.
 ## Planned Directory Structure
 
 ```
-zenn/         # Zenn articles (Japanese)
+articles/     # Zenn articles (Japanese)
+books/        # Zenn books (Japanese)
 tools/        # AI harness and dev tools (e.g., CodeCompass, SoloXP)
 experiments/  # Build-in-public experiments using those tools
 ```
@@ -23,7 +24,7 @@ experiments/  # Build-in-public experiments using those tools
 ## Language Policy
 
 - Repository documentation, code, and comments: **English**
-- Zenn article content under `zenn/`: **Japanese**
+- Zenn article content under `articles/` and `books/`: **Japanese**
 
 ## Development Notes
 
