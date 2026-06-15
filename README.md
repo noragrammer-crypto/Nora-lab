@@ -25,3 +25,8 @@ This repository is **read-only from the outside**.
 - Development happens privately; this repo receives periodic syncs of publishable work.
 - Zenn articles are in Japanese. Code and documentation in this repo are in English.
 - No stability guarantees — this is experimental work shared as-is.
+
+## License
+
+[MIT](./LICENSE) — Copyright (c) 2026 noragrammer-crypto.
+Free to use and adapt, but copyright is retained. No warranty provided.
