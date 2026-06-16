@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude週制限トラッカー</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .lang-switcher {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 4px;
+        }
+
+        .lang-btn {
+            padding: 4px 10px;
+            border: 2px solid #667eea;
+            background: transparent;
+            color: #667eea;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: auto;
+        }
+
+        .lang-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .lang-btn:hover {
+            transform: none;
+            opacity: 0.8;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .usage-link {
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .usage-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7f7f7;
+            border-radius: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="number"],
+        input[type="time"],
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus,
+        input[type="time"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .stats {
+            display: grid;
+            gap: 15px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: 10px;
+            background: #f7f7f7;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border: 2px solid #667eea;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-value.large {
+            font-size: 32px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+        }
+
+        .reset-time {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            color: #856404;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lang-switcher">
+            <button class="lang-btn" id="btn-ja" onclick="setLang('ja')">JP</button>
+            <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+        </div>
+
+        <h1 id="app-title">📊 Claude週制限トラッカー</h1>
+
+        <a href="https://claude.ai/settings/usage" target="_blank" class="usage-link" id="usage-link-text">
+            Claude使用状況ページを開く ↗
+        </a>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="usagePercent" id="label-usage">現在の使用率 (%)</label>
+                <input type="number" id="usagePercent" min="0" max="100" step="0.1" placeholder="0.0">
+            </div>
+
+            <div class="input-group">
+                <label for="resetDay" id="label-reset-day">リセット曜日</label>
+                <select id="resetDay">
+                    <option value="0">日曜日</option>
+                    <option value="1">月曜日</option>
+                    <option value="2">火曜日</option>
+                    <option value="3">水曜日</option>
+                    <option value="4">木曜日</option>
+                    <option value="5" selected>金曜日</option>
+                    <option value="6">土曜日</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="resetTime" id="label-reset-time">リセット時刻</label>
+                <input type="time" id="resetTime" value="19:00">
+            </div>
+
+            <button id="update-btn" onclick="updateUsage()">更新</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card highlight">
+                <div class="stat-label" id="label-remaining">残量</div>
+                <div class="stat-value large" id="remaining">100%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label" id="label-daily">今日使える枠（推奨）</div>
+                <div class="stat-value" id="dailyAllowance">--%</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label" id="label-time-remaining">リセットまでの残り時間</div>
+                <div class="stat-value" id="timeRemaining">計算中...</div>
+            </div>
+        </div>
+
+        <div class="reset-time">
+            <span id="label-next-reset">次回リセット: </span><span id="nextReset">--</span>
+        </div>
+    </div>
+
+    <script>
+        const i18n = {
+            ja: {
+                title: 'Claude週制限トラッカー',
+                openUsagePage: 'Claude使用状況ページを開く ↗',
+                labelUsage: '現在の使用率 (%)',
+                labelResetDay: 'リセット曜日',
+                days: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
+                labelResetTime: 'リセット時刻',
+                updateBtn: '更新',
+                labelRemaining: '残量',
+                labelDaily: '今日使える枠（推奨）',
+                labelTimeRemaining: 'リセットまでの残り時間',
+                calculating: '計算中...',
+                labelNextReset: '次回リセット: ',
+                formatTime: (d, h, m, s) => (d > 0 ? `${d}日 ` : '') + `${h}時間 ${m}分 ${s}秒`,
+                locale: 'ja-JP',
+            },
+            en: {
+                title: 'Claude Weekly Limit Tracker',
+                openUsagePage: 'Open Claude Usage Page ↗',
+                labelUsage: 'Current Usage (%)',
+                labelResetDay: 'Reset Day',
+                days: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                labelResetTime: 'Reset Time',
+                updateBtn: 'Update',
+                labelRemaining: 'Remaining',
+                labelDaily: "Today's Budget (recommended)",
+                labelTimeRemaining: 'Time Until Reset',
+                calculating: 'Calculating...',
+                labelNextReset: 'Next Reset: ',
+                formatTime: (d, h, m, s) => (d > 0 ? `${d}d ` : '') + `${h}h ${m}m ${s}s`,
+                locale: 'en-US',
+            },
+        };
+
+        let currentLang = localStorage.getItem('lang') || 'ja';
+
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('lang', lang);
+            applyLang();
+            calculateStats(parseFloat(localStorage.getItem('claudeUsage')) || 0);
+        }
+
+        function applyLang() {
+            const t = i18n[currentLang];
+            document.documentElement.lang = currentLang;
+            document.title = t.title;
+            document.getElementById('app-title').textContent = '📊 ' + t.title;
+            document.getElementById('usage-link-text').textContent = t.openUsagePage;
+            document.getElementById('label-usage').textContent = t.labelUsage;
+            document.getElementById('label-reset-day').textContent = t.labelResetDay;
+
+            const select = document.getElementById('resetDay');
+            const currentVal = select.value;
+            Array.from(select.options).forEach(opt => {
+                opt.textContent = t.days[parseInt(opt.value)];
+            });
+            select.value = currentVal;
+
+            document.getElementById('label-reset-time').textContent = t.labelResetTime;
+            document.getElementById('update-btn').textContent = t.updateBtn;
+            document.getElementById('label-remaining').textContent = t.labelRemaining;
+            document.getElementById('label-daily').textContent = t.labelDaily;
+            document.getElementById('label-time-remaining').textContent = t.labelTimeRemaining;
+            document.getElementById('label-next-reset').textContent = t.labelNextReset;
+
+            document.getElementById('btn-ja').classList.toggle('active', currentLang === 'ja');
+            document.getElementById('btn-en').classList.toggle('active', currentLang === 'en');
+        }
+
+        function loadSettings() {
+            const savedUsage = localStorage.getItem('claudeUsage');
+            const savedResetDay = localStorage.getItem('resetDay');
+            const savedResetTime = localStorage.getItem('resetTime');
+
+            if (savedUsage) document.getElementById('usagePercent').value = savedUsage;
+            if (savedResetDay) document.getElementById('resetDay').value = savedResetDay;
+            if (savedResetTime) document.getElementById('resetTime').value = savedResetTime;
+
+            calculateStats(parseFloat(savedUsage) || 0);
+        }
+
+        function updateUsage() {
+            const usage = parseFloat(document.getElementById('usagePercent').value) || 0;
+            const resetDay = document.getElementById('resetDay').value;
+            const resetTime = document.getElementById('resetTime').value;
+
+            localStorage.setItem('claudeUsage', usage);
+            localStorage.setItem('resetDay', resetDay);
+            localStorage.setItem('resetTime', resetTime);
+
+            calculateStats(usage);
+        }
+
+        function getNextReset() {
+            const now = new Date();
+            const resetDay = parseInt(localStorage.getItem('resetDay') || '5');
+            const resetTime = localStorage.getItem('resetTime') || '19:00';
+            const [resetHour, resetMinute] = resetTime.split(':').map(Number);
+
+            let nextReset = new Date(now);
+            const currentDay = now.getDay();
+
+            if (currentDay === resetDay && now.getHours() * 60 + now.getMinutes() < resetHour * 60 + resetMinute) {
+                nextReset.setHours(resetHour, resetMinute, 0, 0);
+            } else {
+                const daysUntilReset = (resetDay - currentDay + 7) % 7 || 7;
+                nextReset.setDate(now.getDate() + daysUntilReset);
+                nextReset.setHours(resetHour, resetMinute, 0, 0);
+            }
+
+            return nextReset;
+        }
+
+        function calculateStats(usagePercent) {
+            const remaining = 100 - usagePercent;
+            const nextReset = getNextReset();
+            const now = new Date();
+            const timeRemainingMs = nextReset - now;
+            const daysRemainingDecimal = timeRemainingMs / (1000 * 60 * 60 * 24);
+            const dailyAllowance = daysRemainingDecimal >= 1 ? remaining / daysRemainingDecimal : remaining;
+
+            document.getElementById('remaining').textContent = `${remaining.toFixed(1)}%`;
+            document.getElementById('progressFill').style.width = `${remaining}%`;
+            document.getElementById('dailyAllowance').textContent = `${dailyAllowance.toFixed(1)}%`;
+
+            updateTimeRemaining();
+
+            document.getElementById('nextReset').textContent = nextReset.toLocaleString(i18n[currentLang].locale, {
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        }
+
+        function updateTimeRemaining() {
+            const nextReset = getNextReset();
+            const diff = nextReset - new Date();
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('timeRemaining').textContent = i18n[currentLang].formatTime(days, hours, minutes, seconds);
+        }
+
+        applyLang();
+        loadSettings();
+        setInterval(updateTimeRemaining, 1000);
+
+        document.getElementById('usagePercent').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') updateUsage();
+        });
+    </script>
+</body>
+</html>
