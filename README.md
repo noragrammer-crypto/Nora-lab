@@ -6,16 +6,29 @@ A public monorepo for software experiments, AI tooling, and articles — mirrore
 
 | Directory | Description |
 |-----------|-------------|
-| `zenn/` | Articles published on [Zenn](https://zenn.dev) (Japanese) |
+| `articles/` | Articles published on [Zenn](https://zenn.dev) (Japanese) |
+| `books/` | Books published on [Zenn](https://zenn.dev) (Japanese) |
 | `tools/` | AI harness & software development tools (e.g., CodeCompass, SoloXP) |
 | `experiments/` | Public build-in-public experiments using those tools |
+
+## Tools
+
+### Claude Weekly Limit Meter
+
+A simple web app to track your remaining Claude weekly usage.
+
+- Enter current usage % → see remaining capacity and today's recommended budget
+- Countdown to next reset (day/time configurable)
+- Auto-saves to LocalStorage; no backend required
+
+**[Try it →](https://noragrammer-crypto.github.io/Nora-lab/tools/ClaudeWeekMeator/)**
 
 ## Contribution Policy
 
 This repository is **read-only from the outside**.
 
 - **Pull Requests**: Not accepted. This repo is a mirror of private development; changes flow one way.
-- **Issues**: Welcome. Bug reports, questions, and feedback are appreciated.
+- **Issues**: Welcome. Bug reports, question, and feedback are appreciated.
 - **Discussions**: Open for broader conversations if you want to share ideas.
 
 > If you find something useful here, feel free to fork and adapt it for your own work.
