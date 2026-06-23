@@ -23,7 +23,10 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ROOT = path.resolve(__dirname, '../..');
-const REPO_ROOT = path.resolve(ROOT, '..');
+// CodeCompass is mirrored into Nora-lab under tools/CodeCompass, so the
+// repository root is two levels up from here (not one, as in HolyAutomater
+// where CodeCompass lives at the repo root).
+const REPO_ROOT = path.resolve(ROOT, '../..');
 const SCRIPT_PATH = path.join(ROOT, 'scripts', 'hotspot.js');
 const WORKFLOW_PATH = path.join(REPO_ROOT, '.github', 'workflows', 'codecompass.yml');
 const README_CANDIDATES = [
