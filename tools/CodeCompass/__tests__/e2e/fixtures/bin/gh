@@ -1,0 +1,57 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * E2E テスト用 gh CLI スタブ（Story #1546 / Task #1547）。
+ * FAKE_GH_SCENARIO で挙動を切り替え、呼び出しを FAKE_GH_LOG に記録する。
+ * 実ネットワーク・実GitHubには一切アクセスしない。
+ */
+
+const fs = require('fs');
+
+const args = process.argv.slice(2);
+const log = process.env.FAKE_GH_LOG;
+if (log) fs.appendFileSync(log, `gh ${args.join(' ')}\n`);
+
+const scenario = process.env.FAKE_GH_SCENARIO || 'above-threshold-no-duplicate';
+
+function out(obj) {
+  process.stdout.write(JSON.stringify(obj) + '\n');
+}
+
+if (args[0] === 'pr' && args[1] === 'list') {
+  out(scenario === 'no-pr-found' ? [] : [{ number: 42 }]);
+  process.exit(0);
+}
+
+if (args[0] === 'pr' && args[1] === 'view') {
+  const topScore = scenario === 'below-threshold' ? '0.8000' : '2.1234';
+  const table = [
+    '| file | hotspotScore | complexity | changes | loc | linesChanged |',
+    '|------|-------------|-----------|---------|-----|-------------|',
+    `| modal/app.py | ${topScore} | 50 | 41 | 800 | 900 |`,
+    '| other/file.js | 0.6300 | 20 | 10 | 300 | 150 |',
+    '',
+  ].join('\n');
+  const body = `## CodeCompass Hotspots (Top 10)\n\n${table}`;
+  out({ comments: [{ body }] });
+  process.exit(0);
+}
+
+if (args[0] === 'issue' && args[1] === 'list') {
+  out(scenario === 'duplicate-exists' ? [{ number: 999 }] : []);
+  process.exit(0);
+}
+
+if (args[0] === 'issue' && args[1] === 'create') {
+  process.stdout.write('https://github.com/owner/repo/issues/1000\n');
+  process.exit(0);
+}
+
+if (args[0] === 'repo' && args[1] === 'view') {
+  out({ nameWithOwner: 'owner/repo' });
+  process.exit(0);
+}
+
+process.stderr.write(`fake gh: unhandled command: ${args.join(' ')}\n`);
+process.exit(1);
