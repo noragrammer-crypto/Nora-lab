@@ -13,6 +13,10 @@ A public monorepo for software experiments, AI tooling, and articles — mirrore
 
 ## Tools
 
+### CodeCompass
+
+Detects refactoring hotspots from git history and AST analysis: `(change frequency × complexity) / LOC`. The current MVP runs via GitHub Actions only — local execution isn't supported (shallow clones make change-frequency counts unreliable). See [`tools/CodeCompass/`](./tools/CodeCompass/) for setup and the workflows this repo dogfoods at [`.github/workflows/codecompass.yml`](./.github/workflows/codecompass.yml) and [`.github/workflows/hotspot-alert.yml`](./.github/workflows/hotspot-alert.yml).
+
 ### Claude Weekly Limit Meter
 
 A simple web app to track your remaining Claude weekly usage.
