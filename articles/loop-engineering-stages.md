@@ -3,7 +3,7 @@ title: "制御理論から理解するループエンジニアリング――「
 emoji: "🔁"
 type: "idea"
 topics: ["claudecode", "AIエージェント", "loopengineering", "制御工学"]
-published: false
+published: true
 ---
 
 ## はじめに
