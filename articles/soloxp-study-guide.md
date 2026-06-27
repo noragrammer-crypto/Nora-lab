@@ -1,3 +1,11 @@
+---
+title: "SoloXP 自律型AI協調開発フレームワーク 総合学習ガイド"
+emoji: "📘"
+type: "idea"
+topics: ["claudecode", "ai", "個人開発", "github", "xp"]
+published: false
+---
+
 # SoloXP 自律型AI協調開発フレームワーク 総合学習ガイド
 
 SoloXP（Solo eXtreme Programming）は、個人開発者がAIエージェントをチームメンバーとして活用し、開発プロセスを自動化・効率化するためのAIコーディングハーネスです。本ガイドでは、SoloXPのアーキテクチャ、役割、ワークフロー、および運用管理について包括的に解説します。
