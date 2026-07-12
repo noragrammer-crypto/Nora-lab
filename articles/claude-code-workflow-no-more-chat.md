@@ -7,7 +7,7 @@ topics:
   - workflow
   - 個人開発
   - 自動化
-published: false
+published: true
 ---
 
 # ClaudeCodeとほぼ会話しなくなった話
