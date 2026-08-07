@@ -1,0 +1,30 @@
+name: CodeCompass Hotspot Alert
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  hotspot-alert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install CodeCompass dependencies
+        run: npm install
+        working-directory: CodeCompass
+
+      - name: Run hotspot-alert
+        run: node scripts/hotspot-alert.js --branch=main
+        working-directory: CodeCompass

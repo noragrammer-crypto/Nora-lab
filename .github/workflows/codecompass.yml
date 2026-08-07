@@ -1,0 +1,49 @@
+name: CodeCompass Hotspot Analysis
+
+on:
+  pull_request:
+
+jobs:
+  hotspots:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install CodeCompass dependencies
+        run: npm install
+        working-directory: tools/CodeCompass
+
+      - name: Run hotspot analysis
+        run: node scripts/hotspot.js ../.. --outDir=../../codecompass
+        working-directory: tools/CodeCompass
+
+      - name: Upload hotspots artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: codecompass-hotspots
+          path: codecompass/hotspots.md
+
+      - name: Post hotspot Top10 as PR comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const lines = fs.readFileSync('codecompass/hotspots.md', 'utf8').split('\n');
+            const top10 = lines.slice(0, 12).join('\n');
+            const body = `## CodeCompass Hotspots (Top 10)\n\n${top10}`;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
