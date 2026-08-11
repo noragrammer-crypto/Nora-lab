@@ -38,11 +38,12 @@ xp_Auditor はテスト実行・結果分析・品質報告を担うスキル。
 2. `xp_RunTestSuites` 経由で Unit + Functional テストを実行する
 3. **E2E テストの判断（Story-level Auditor フェーズ）**：タスクイシュー単体の場合は E2E をスキップする。xp_Director から AllGREEN 後に `xp_Auditor test <epic> <story>` として呼ばれた場合は **Story-level Auditor フェーズ** を実行する：
    - `xp_RunE2ETests` で E2E テストを実行する
-   - GREEN → `[Auditor GREEN]` をストーリーイシューに記録し **xp_Director に返す**。xp_Reviewer 呼び出し・PR 発行・ストーリークローズは xp_Director の責務
-   - RED → バグイシューを起票してストーリーは継続
+   - GREEN（自ストーリーが所有するブロック対象がゼロ件） → `[Auditor GREEN]` をストーリーイシューに記録し **xp_Director に返す**。xp_Reviewer 呼び出し・PR 発行・ストーリークローズは xp_Director の責務
+   - RED → バグイシューを起票し、**所有権ベースの非対称ブロック（#2807/#2809）** を適用する：既存バグイシューの親が自ストーリー、または親未設定で新規に所有権を取得した場合はブロック（ストーリー継続・クローズしない）。親が**他のオープンなストーリー**の場合はブロックしない（重複検知コメントのみ記録して先へ進む。#2807 の相互ロック解消）
    - E2E 実行不可 → `[E2E スキップ]` コメントを記録しユーザーに委ねる
+   - **スコープ限定（#2784）**: 下記4.の「別タスクスコープ」判断基準（現タスクのテスト結果には影響しない）は Task-level 専用であり、Story-level Auditor フェーズには適用されない・援用できない。既知・別タスクスコープの RED であっても、Story-level では所有権判定（上記）に従う
 
-4. 各 FAIL テストについてスコープを判断する：
+4. 各 FAIL テストについてスコープを判断する（Task-level `xp_Auditor test <epic> <task_issue>` 専用。3.の Story-level Auditor フェーズには適用しない）：
    - **同一タスクスコープ内**: Implementer に差し戻し
    - **別タスクスコープ**: バグイシューを新規発行して通常キューへ
 

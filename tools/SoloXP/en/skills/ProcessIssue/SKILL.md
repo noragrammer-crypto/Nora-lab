@@ -116,7 +116,7 @@ Since `gh` CLI's `--json subIssues` is not supported, obtain it via MCP tool:
 - issue_number: `<story number>`
 2. Narrow down the candidates by checking the following for each sub-issue:
 - `backlog` / `block` no label
-- env ​label matching (or no env label)
+- env ​​label matching (or no env label)
 - Not InProgress (the most recent `[ProjectStatus: InProgress]` comment **doesn't exist** or **more than an hour has passed** since it was posted)
 - `depends_on` resolved (with `[Auditor GREEN]`)
 3. Sort the active subissues by issue number **ascending** and select the oldest one

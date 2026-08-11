@@ -59,20 +59,20 @@ Test file: `SoloXP/tests/e2e/issue-1461-ai-dev-cost-token-tracking.test.js` Numb
 | # | Acceptance conditions | Test case | Current status |
 |---|---|---|---|
 | Assumption | Token consumption record format is defined in CLAUDE.md | tokens: Existence of format example | ✅ |
-| Assumptions | 〇 | Existence of prompt/completion/total field | ✅ |
-| Premise | 〇 | model: Existence of field | ✅ |
-| Assumptions | 〇 | User confirmation policy in case of format corruption | ✅ |
+| Assumptions | 〃 | Existence of prompt/completion/total field | ✅ |
+| Premise | 〃 | model: Existence of field | ✅ |
+| Assumptions | 〃 | User confirmation policy in case of format corruption | ✅ |
 | AC-1 | Token consumption per issue can be aggregated with xp_worklog | There is a description that xp_worklog recognizes the tokens: line | 🔴 (implemented in #2143) |
-| AC-1 | 〇 | There is a token consumption column in the report by issue | 🔴 (implemented in #2143) |
-| AC-1 | 〇 | The worklog file save format has a token string | 🔴 (implemented in #2143) |
+| AC-1 | 〃 | There is a token consumption column in the report by issue | 🔴 (implemented in #2143) |
+| AC-1 | 〃 | The worklog file save format has a token string | 🔴 (implemented in #2143) |
 | AC-3 | You can judge by the number of token consumption and completed issues in Epic units | xp_worklog has an Epic unit aggregation section | 🔴 (implemented in #2144) |
-| AC-3 | 〇 | Number of completed issues and token consumption are listed in parallel | 🔴 (implemented in #2144) |
-| AC-3 | 〇 | Contains total or average token consumption | 🔴 (implemented in #2144) |
+| AC-3 | 〃 | Number of completed issues and token consumption are listed in parallel | 🔴 (implemented in #2144) |
+| AC-3 | 〃 | Contains total or average token consumption | 🔴 (implemented in #2144) |
 | AC-2 | ops-meeting report includes weekly token summary | ops-meeting has instructions for weekly token summary | 🔴 (implemented in #2145) |
-| AC-2 | 〇 | There is an instruction to read token aggregation data from worklog | 🔴 (implemented in #2145) |
-| AC-2 | 〇 | Report template has token consumption section | 🔴 (implemented in #2145) |
+| AC-2 | 〃 | There is an instruction to read token aggregation data from worklog | 🔴 (implemented in #2145) |
+| AC-2 | 〃 | Report template has token consumption section | 🔴 (implemented in #2145) |
 | Synchronization | dotfiles and SoloXP copies have the same contents | xp_worklog Both copies match | ✅ |
-| Synchronization | 〇 | ops-meeting Both copies match | ✅ |
+| Synchronization | 〃 | ops-meeting Both copies match | ✅ |
 
 RED is the correct initial state for TDD. #2143, #2144, #2145 will become GREEN after implementation.
 

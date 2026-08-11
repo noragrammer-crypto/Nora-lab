@@ -99,7 +99,7 @@ Waiting for a human response does not occur) and checks for conflicts with exist
 > Since the design requires waiting for a human response in Phase 6 (review judgment), it cannot be incorporated into the automatic flow.
 >On the other hand, the `code-architect` subagent is a read-only tool and can be called without waiting for a human response.
 
-**How ​to call:**
+**How ​​to call:**
 
 Call the Agent tool passing the following:
 - `subagent_type`: `code-architect`

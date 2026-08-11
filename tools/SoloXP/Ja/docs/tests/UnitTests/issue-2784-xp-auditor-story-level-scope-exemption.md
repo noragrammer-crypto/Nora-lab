@@ -2,7 +2,7 @@
 
 ## テスト対象
 
-`SoloXP/skills/xp_Auditor/SKILL.md`(内容の静的検証）
+`SoloXP/skills/xp_Auditor/SKILL.md`（内容の静的検証）
 
 Story-level Auditor フェーズ（`### 3.`）とTask-level専用の別タスクスコープバグ免除ロジック節
 （`### 6.`）の適用範囲が明示されていないため、Task-level専用の「現タスクのテスト結果には

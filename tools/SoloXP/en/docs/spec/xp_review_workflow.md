@@ -44,8 +44,6 @@ Identify deviant issues using the following patterns:
 - Issues where the same phase is repeated three or more times (remand loop)
 - Issues with `[PR issued]` recorded without `[Auditor GREEN]`
 
-This step also identifies which issue has deviated from the expected workflow.
-
 ---
 
 ## Identify the cause SKILL

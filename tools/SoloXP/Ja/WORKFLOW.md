@@ -17,7 +17,7 @@ Issue 作成（ユーザー）
     ↓
 xp_Architect: サブイシュー発行
     ↓
-xp_Director: タス1件ずつ順番に処理
+xp_Director: タスク1件ずつ順番に処理
   └─ xp_Tester → xp_Implementer → xp_Auditor test → xp_Documenter → xp_Auditor doc
     ↓
 [Auditor GREEN] → 親イシューへ完了報告

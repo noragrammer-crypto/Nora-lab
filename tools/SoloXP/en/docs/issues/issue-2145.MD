@@ -64,7 +64,7 @@ Skip: No code to test because only SKILL.md/document description has been change
 ### Functional Test
 Skip: Same as above
 
-### E2E Test (existing suite: `SoloXP/tests/e2e/issue-1461-ai-dev-cost-token-tracking.test.js`）
+### E2E Test (existing suite: `SoloXP/tests/e2e/issue-1461-ai-dev-cost-token-tracking.test.js`��
 
 The scope of this task is AC-2 (ops-meeting weekly token summary) only.
 

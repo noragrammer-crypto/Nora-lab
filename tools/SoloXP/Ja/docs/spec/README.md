@@ -17,7 +17,7 @@
 | ファイル | 概要 |
 |---|---|
 | `docs/skill-files-sync.md`（モノレポ内パス。Nora-lab公開範囲外のためリンクではなくパス表記） | 正本（`SoloXP/skills/xp_*` + `workflow/skills/*`）→バイナリ（`dotfiles/.claude/skills/`・`.claude/skills/`）の同期方向・pre-pushフックの仕組み（Phase1/2） |
-| [nora_lab_publish.md](nora_lab_publish.md) | `make sync-nora-lab` + `git subtree push` によるNora-lab公開パイプライン（Phase3） |
+| [nora_lab_publish.md](nora_lab_publish.md) | `make sync-nora-lab` + `make publish-nora-lab`（公開HEAD基準のsnapshot/diff commit方式）によるNora-lab公開パイプライン（Phase3、#2761で継続同期方式を再設計） |
 
 ## ワークログ・計測スキル
 

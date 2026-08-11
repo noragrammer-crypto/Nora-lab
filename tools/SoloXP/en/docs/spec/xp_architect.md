@@ -66,7 +66,7 @@ Calls the `code-architect` subagent (Agent tool, `subagent_type: code-architect`
 > `code-architect` subagent itself is a read-only tool (Glob/Grep/LS/Read/NotebookRead/
 > WebFetch/TodoWrite/WebSearch/KillShell/BashOutput) and can be called without waiting for a human response.
 
-**How ​to call:**
+**How ​​to call:**
 
 Call the Agent tool passing the following:
 - `subagent_type`: `code-architect`
