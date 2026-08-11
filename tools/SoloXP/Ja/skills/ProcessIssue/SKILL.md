@@ -99,12 +99,12 @@ gh issue view <issue_number> --json comments --repo <owner>/<repo>
 
 ```bash
 gh issue view <depends_on番号> --json comments --repo <owner>/<repo> \
-  | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); print('GREEN') if any('[Auditor GREEN]' in c.get('body','') for c in cs) else None"
+  | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); bodies=[c.get('body','') for c in cs]; print('GREEN') if any('[Auditor GREEN]' in b or '[Auditor doc OK]' in b for b in bodies) else None"
 ```
 
-- `[Auditor GREEN]` が見つかれば依存解消とみなす
-- 見つからなければブロック中 → スキップして次の候補へ
-- **GitHub の close 状態は見ない**（クローズ済みでも `[Auditor GREEN]` がなければブロック中）
+- `[Auditor GREEN]` が見つかれば依存解消とみなす。依存先が `spec_update` タスク（`xp_doc_spec` → `xp_Auditor doc` のみを通過し `[Auditor GREEN]` は構造的に出力されない）の場合は `[Auditor doc OK]` の有無で判定する（両マーカーは排他的なため、依存先の種別を個別判定せず両方チェックしてよい）
+- どちらも見つからなければブロック中 → スキップして次の候補へ
+- **GitHub の close 状態は見ない**（クローズ済みでも `[Auditor GREEN]` / `[Auditor doc OK]` がなければブロック中）
 
 **C. Architect済みイシュー チェック**
 
@@ -130,12 +130,13 @@ gh issue view <issue_number> --json comments --repo <owner>/<repo> \
      - `backlog` / `block` ラベルなし
      - env ラベル一致（または env ラベルなし）
      - InProgress でない（最新の `[ProjectStatus: InProgress]` コメントが**存在しない**、または投稿から **1時間以上経過している**こと）
-     - `depends_on` 解消済み（`[Auditor GREEN]` あり）
+     - `depends_on` 解消済み（`[Auditor GREEN]` あり。ただし依存先が `spec_update` タスク〈タイトルに「機能仕様書更新」または本文に `task_type: spec_update`〉の場合は `[Auditor doc OK]` あり）
   3. 有効なサブイシューをイシュー番号**昇順**でソートし、最古のものを選択する
   4. 有効なサブイシューがゼロ件の場合:
      - 全サブイシューのコメントを確認する
-     - 全サブイシューに `[Auditor GREEN]` がある → `xp_Director <ストーリー番号>` を呼び AllGREEN 完了フローへ委譲する
-     - 未完了サブイシューがある（`[Auditor GREEN]` なし） → このStoryは未完了サブイシューありとして保留し、候補評価へ戻る
+     - 各サブイシューの完了マーカーは、通常タスクは `[Auditor GREEN]`、`spec_update` タスク（タイトルに「機能仕様書更新」または本文に `task_type: spec_update`）は `[Auditor doc OK]` とする（`spec_update` タスクは `xp_doc_spec` → `xp_Auditor doc` のみを通過し、`[Auditor GREEN]` は構造的に出力されない）
+     - 全サブイシューが該当の完了マーカーを満たしている → `xp_Director <ストーリー番号>` を呼び AllGREEN 完了フローへ委譲する
+     - 該当の完了マーカーを満たさない未完了サブイシューが残っている → このStoryは未完了サブイシューありとして保留し、候補評価へ戻る
 
 **D. 選択確定**
 
