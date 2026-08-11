@@ -1,0 +1,728 @@
+{
+  "schema_version": 1,
+  "source_directory": "../Ja",
+  "source_revision": "ef778b889ff84f23fa93cbe0f2192c30fb46b5d3",
+  "policy": {
+    "source_of_truth": "Ja",
+    "translated_files": "Each text file has the same relative path under en.",
+    "non_localized_files": "Licenses, executable scripts, and package metadata are mirrored unchanged unless a localized value is required."
+  },
+  "status": "complete",
+  "files": [
+    {
+      "source": "../Ja/CLAUDE.md.template",
+      "target": "CLAUDE.md.template",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/Codex.md",
+      "target": "Codex.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/LICENSE",
+      "target": "LICENSE",
+      "status": "mirrored"
+    },
+    {
+      "source": "../Ja/README.md",
+      "target": "README.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/WORKFLOW.md",
+      "target": "WORKFLOW.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/ARCHITECTURE.md",
+      "target": "docs/history/memo/ARCHITECTURE.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/METRICS.md",
+      "target": "docs/history/memo/METRICS.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/README.md",
+      "target": "docs/history/memo/README.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/SXP_Framework_企画検討会_議事録_v1.0.md",
+      "target": "docs/history/memo/SXP_Framework_企画検討会_議事録_v1.0.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/Solo eXtreme Programming with AI Agents - 参考資料集.md",
+      "target": "docs/history/memo/Solo eXtreme Programming with AI Agents - 参考資料集.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/TARGET_AUDIENCE.md",
+      "target": "docs/history/memo/TARGET_AUDIENCE.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/history/memo/solo_xp_workflow_v2.drawio.txt",
+      "target": "docs/history/memo/solo_xp_workflow_v2.drawio.txt",
+      "status": "mirrored"
+    },
+    {
+      "source": "../Ja/docs/history/memo/xp_skills_全体設計草案_v2.md",
+      "target": "docs/history/memo/xp_skills_全体設計草案_v2.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1007.MD",
+      "target": "docs/issues/issue-1007.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1008.MD",
+      "target": "docs/issues/issue-1008.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1112.MD",
+      "target": "docs/issues/issue-1112.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1247.MD",
+      "target": "docs/issues/issue-1247.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1273.MD",
+      "target": "docs/issues/issue-1273.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1293.MD",
+      "target": "docs/issues/issue-1293.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1330.MD",
+      "target": "docs/issues/issue-1330.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1341.MD",
+      "target": "docs/issues/issue-1341.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1360.MD",
+      "target": "docs/issues/issue-1360.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1364.MD",
+      "target": "docs/issues/issue-1364.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1381.MD",
+      "target": "docs/issues/issue-1381.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1392.MD",
+      "target": "docs/issues/issue-1392.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1412.MD",
+      "target": "docs/issues/issue-1412.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1444.MD",
+      "target": "docs/issues/issue-1444.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1461.MD",
+      "target": "docs/issues/issue-1461.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1532.MD",
+      "target": "docs/issues/issue-1532.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1565.MD",
+      "target": "docs/issues/issue-1565.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1680.MD",
+      "target": "docs/issues/issue-1680.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1681.MD",
+      "target": "docs/issues/issue-1681.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1698.MD",
+      "target": "docs/issues/issue-1698.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1701.MD",
+      "target": "docs/issues/issue-1701.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1992.MD",
+      "target": "docs/issues/issue-1992.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-1993.MD",
+      "target": "docs/issues/issue-1993.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2039.MD",
+      "target": "docs/issues/issue-2039.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2097.MD",
+      "target": "docs/issues/issue-2097.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2098.MD",
+      "target": "docs/issues/issue-2098.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2099.MD",
+      "target": "docs/issues/issue-2099.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2100.MD",
+      "target": "docs/issues/issue-2100.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2141.MD",
+      "target": "docs/issues/issue-2141.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2142.MD",
+      "target": "docs/issues/issue-2142.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2143.MD",
+      "target": "docs/issues/issue-2143.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2144.MD",
+      "target": "docs/issues/issue-2144.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2145.MD",
+      "target": "docs/issues/issue-2145.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-250.md",
+      "target": "docs/issues/issue-250.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-251.md",
+      "target": "docs/issues/issue-251.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2637.MD",
+      "target": "docs/issues/issue-2637.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2638.MD",
+      "target": "docs/issues/issue-2638.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2639.MD",
+      "target": "docs/issues/issue-2639.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2640.MD",
+      "target": "docs/issues/issue-2640.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2641.MD",
+      "target": "docs/issues/issue-2641.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2642.MD",
+      "target": "docs/issues/issue-2642.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2643.MD",
+      "target": "docs/issues/issue-2643.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2644.MD",
+      "target": "docs/issues/issue-2644.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-269.MD",
+      "target": "docs/issues/issue-269.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2724.MD",
+      "target": "docs/issues/issue-2724.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2741.MD",
+      "target": "docs/issues/issue-2741.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-276.MD",
+      "target": "docs/issues/issue-276.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2761.MD",
+      "target": "docs/issues/issue-2761.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-400.MD",
+      "target": "docs/issues/issue-400.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-597.MD",
+      "target": "docs/issues/issue-597.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-616.MD",
+      "target": "docs/issues/issue-616.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-617.MD",
+      "target": "docs/issues/issue-617.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-620.MD",
+      "target": "docs/issues/issue-620.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-621.MD",
+      "target": "docs/issues/issue-621.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-640.MD",
+      "target": "docs/issues/issue-640.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-717.md",
+      "target": "docs/issues/issue-717.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-771.MD",
+      "target": "docs/issues/issue-771.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/branch-concept.md",
+      "target": "docs/manual/branch-concept.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/branch-strategy.md",
+      "target": "docs/manual/branch-strategy.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/claude-code-web.md",
+      "target": "docs/manual/claude-code-web.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/install.md",
+      "target": "docs/manual/install.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/setup.md",
+      "target": "docs/manual/setup.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/tutorial.md",
+      "target": "docs/manual/tutorial.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/README.md",
+      "target": "docs/spec/README.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/nora_lab_publish.md",
+      "target": "docs/spec/nora_lab_publish.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/tdd_principles.md",
+      "target": "docs/spec/tdd_principles.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_architect.md",
+      "target": "docs/spec/xp_architect.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_auditor.md",
+      "target": "docs/spec/xp_auditor.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_director.md",
+      "target": "docs/spec/xp_director.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_doc_generation.md",
+      "target": "docs/spec/xp_doc_generation.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_implementer.md",
+      "target": "docs/spec/xp_implementer.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_plan.md",
+      "target": "docs/spec/xp_plan.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_review_workflow.md",
+      "target": "docs/spec/xp_review_workflow.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_reviewer.md",
+      "target": "docs/spec/xp_reviewer.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/spec/xp_worklog.md",
+      "target": "docs/spec/xp_worklog.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-1381-xp-architect-feature-dev.md",
+      "target": "docs/tests/E2ETests/issue-1381-xp-architect-feature-dev.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-1410-worklog-markers.md",
+      "target": "docs/tests/E2ETests/issue-1410-worklog-markers.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-1461-ai-dev-cost-token-tracking.md",
+      "target": "docs/tests/E2ETests/issue-1461-ai-dev-cost-token-tracking.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-2168-soloxp-canonicalization-nora-lab-pipeline.md",
+      "target": "docs/tests/E2ETests/issue-2168-soloxp-canonicalization-nora-lab-pipeline.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-243-sub-issue-reporting.md",
+      "target": "docs/tests/E2ETests/issue-243-sub-issue-reporting.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-254-workflow-update.md",
+      "target": "docs/tests/E2ETests/issue-254-workflow-update.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-274-story-close-on-allgreen.md",
+      "target": "docs/tests/E2ETests/issue-274-story-close-on-allgreen.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-615-parent-branch-pr-stacking.md",
+      "target": "docs/tests/E2ETests/issue-615-parent-branch-pr-stacking.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/issue-638-pr-autoclose-keywords.md",
+      "target": "docs/tests/E2ETests/issue-638-pr-autoclose-keywords.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/E2ETests/sub-issue-completion-reporting.md",
+      "target": "docs/tests/E2ETests/sub-issue-completion-reporting.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/issue-2639-pre-push-hook-sync-behavior.md",
+      "target": "docs/tests/FunctionTests/issue-2639-pre-push-hook-sync-behavior.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/issue-2640-claude-skills-sync-behavior.md",
+      "target": "docs/tests/FunctionTests/issue-2640-claude-skills-sync-behavior.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/issue-2642-makefile-sync-nora-lab.md",
+      "target": "docs/tests/FunctionTests/issue-2642-makefile-sync-nora-lab.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/issue-2724-pre-push-hook-stale-entry-pruning.md",
+      "target": "docs/tests/FunctionTests/issue-2724-pre-push-hook-stale-entry-pruning.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/issue-2761-publish-nora-lab-snapshot.md",
+      "target": "docs/tests/FunctionTests/issue-2761-publish-nora-lab-snapshot.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/FunctionTests/pr-2746-codex-review-fixes.md",
+      "target": "docs/tests/FunctionTests/pr-2746-codex-review-fixes.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-1364-spec-readme-link-integrity.md",
+      "target": "docs/tests/UnitTests/issue-1364-spec-readme-link-integrity.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-1680-rune2etests-runner-autodetect.md",
+      "target": "docs/tests/UnitTests/issue-1680-rune2etests-runner-autodetect.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-2639-pre-push-hook-direction-reversal.md",
+      "target": "docs/tests/UnitTests/issue-2639-pre-push-hook-direction-reversal.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-2640-claude-skills-sync-strategy.md",
+      "target": "docs/tests/UnitTests/issue-2640-claude-skills-sync-strategy.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-2642-makefile-sync-nora-lab.md",
+      "target": "docs/tests/UnitTests/issue-2642-makefile-sync-nora-lab.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-2724-pre-push-hook-stale-entry-pruning.md",
+      "target": "docs/tests/UnitTests/issue-2724-pre-push-hook-stale-entry-pruning.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-2741-skill-files-sync-doc-regex-distance.md",
+      "target": "docs/tests/UnitTests/issue-2741-skill-files-sync-doc-regex-distance.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-613-no-process-exit-in-tests.md",
+      "target": "docs/tests/UnitTests/issue-613-no-process-exit-in-tests.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-614-close-vs-close-ja.md",
+      "target": "docs/tests/UnitTests/issue-614-close-vs-close-ja.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/tests/UnitTests/issue-904-auditor-bug-template-parent-branch.md",
+      "target": "docs/tests/UnitTests/issue-904-auditor-bug-template-parent-branch.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/package.json",
+      "target": "package.json",
+      "status": "mirrored"
+    },
+    {
+      "source": "../Ja/scripts/publish-nora-lab.sh",
+      "target": "scripts/publish-nora-lab.sh",
+      "status": "mirrored"
+    },
+    {
+      "source": "../Ja/skills/ProcessIssue/SKILL.md",
+      "target": "skills/ProcessIssue/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Architect/SKILL.md",
+      "target": "skills/xp_Architect/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Auditor/SKILL.md",
+      "target": "skills/xp_Auditor/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Director/SKILL.md",
+      "target": "skills/xp_Director/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Documenter/SKILL.md",
+      "target": "skills/xp_Documenter/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_DocumenterCodex/SKILL.md",
+      "target": "skills/xp_DocumenterCodex/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_E2Etest/SKILL.md",
+      "target": "skills/xp_E2Etest/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_FunctionalTest/SKILL.md",
+      "target": "skills/xp_FunctionalTest/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Implementer/SKILL.md",
+      "target": "skills/xp_Implementer/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_ImplementerCodex/SKILL.md",
+      "target": "skills/xp_ImplementerCodex/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Reviewer/SKILL.md",
+      "target": "skills/xp_Reviewer/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_RunAllUnitTests/SKILL.md",
+      "target": "skills/xp_RunAllUnitTests/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_RunE2ETests/SKILL.md",
+      "target": "skills/xp_RunE2ETests/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_RunTestSuites/SKILL.md",
+      "target": "skills/xp_RunTestSuites/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_Tester/SKILL.md",
+      "target": "skills/xp_Tester/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_UnitTest/SKILL.md",
+      "target": "skills/xp_UnitTest/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_doc_E2ETests/SKILL.md",
+      "target": "skills/xp_doc_E2ETests/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_doc_FunctionTests/SKILL.md",
+      "target": "skills/xp_doc_FunctionTests/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_doc_UnitTests/SKILL.md",
+      "target": "skills/xp_doc_UnitTests/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_doc_reference/SKILL.md",
+      "target": "skills/xp_doc_reference/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_doc_spec/SKILL.md",
+      "target": "skills/xp_doc_spec/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_issue/SKILL.md",
+      "target": "skills/xp_issue/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_issue2md/SKILL.md",
+      "target": "skills/xp_issue2md/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_plan/SKILL.md",
+      "target": "skills/xp_plan/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_review_workflow/SKILL.md",
+      "target": "skills/xp_review_workflow/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/xp_worklog/SKILL.md",
+      "target": "skills/xp_worklog/SKILL.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/solo_xp_workflow_v3.drawio.txt",
+      "target": "solo_xp_workflow_v3.drawio.txt",
+      "status": "mirrored"
+    }
+  ]
+}
