@@ -1,12 +1,42 @@
 # SoloXP
 
-**AIコーディングエージェント時代に、個人がきちんとしたプロセスに従ってソフトウェア開発を進めるための仕組み。**
+**AIコーディングエージェント時代に、個人がきちんとしたプロセスに従ってソフトウェア開発を進めるための仏組み。**
 最近の言葉で言うなら「ハーネスエンジニアリング」の一例にあたる。
 
 GitHub（または類似のgit環境ツール）を基盤に、Issueドリブンで開発を進める。
 
 > ⚠️ 使い始める前に、[`CLAUDE.md.template`](./CLAUDE.md.template) を自分のリポジトリの `CLAUDE.md` にコピーしてください。
 > SoloXPの各スキルは、そこに定義されるブランチ運用・PR発行の前提・TDD原則・作業時間記録フォーマットを前提に動作します。
+
+---
+
+## クイックスタート
+
+最短ルートは次の5ステップ（0番の詳細は [インストールマニュアル](./docs/manual/install.md)・
+[セットアップマニュアル](./docs/manual/setup.md) 参照）:
+
+0. （初回のみ）SoloXPのスキルを `.claude/skills/` 等に登録し、`CLAUDE.md.template` を自分の
+   `CLAUDE.md` にコピーする
+1. GitHub Issueを起票する（例: `gh issue create --title "[Task] ..." --body "..."`)
+2. Claude Codeで `/xp_Director <issue番号>` を実行する
+3. xp_Tester → xp_Implementer → xp_Auditor（テスト）→ xp_Documenter → xp_Auditor（ドキュメント）
+   が自動で回り、ドキュメント監査までグリーンになった時点でPRが発行される
+4. PRを確認してマージする（`gh pr merge <PR番号> --squash --delete-branch`）
+
+### 実行例
+
+`/xp_Director` 実行中、Issueには進捗コメントが自動で積まれていく（抜粋）:
+
+```
+[Tester完了] tests/unit/dateFormat.test.js を追加（4ケース）
+[Implementer完了] lib/dateFormat.js を実装、既存呼び出し箇所を置き換え
+[Auditor GREEN] 全、4ケース pass。既存テストも回帰なし。実装がテストの意図を満たしていることを確認。
+[Documenter完了] docs/spec/dateFormat.md, docs/reference/dateFormat.md を更新
+[Auditor doc OK]
+[PR発行済み #102]
+```
+
+Issue本文の書き方からPRマージまでの完全な実例は [使い方チュートリアル](./docs/manual/tutorial.md) を参照。
 
 ---
 
@@ -33,7 +63,7 @@ GitHub Issue を開発の起点に据え、Issueという「差分（デルタ�
 アジャイルプロセスの代表であり先駆的アプローチでもある XP（Extreme Programming）を土台に、
 AIエージェントと安定的に協働するためのワークフロー定義（Architect / Tester / Implementer / Auditor
 等の役割分担、差し戻し制御、ドキュメント同時更新など）を追加している。単発の指示応答ではなく、
-繰り返し安定して開発が進むことを狙って設計した仕組み。
+繰り返し安定して開発が進むことを狙って設計した仏組み。
 
 ### 3. TDD中心 — バイブコーディングより重量級
 
@@ -41,7 +71,7 @@ TDDを開発の中心に据えているため、少しずつ着実にシステ�
 バイブコーディングのように「手早く結果が出る」方法論と比べるとかなり重い手法になる。
 
 **バイブコーディングで「良し悪しの判断が難しくなってきた」と感じている人には、SoloXPが向いている
-可能性が高い。** テストという明示的な合格基準を挟むことで、AIの出力を人間が逐一判断しなくても
+可能性が高い。** テストという明示的な合格基準を挿むことで、AIの出力を人間が逐一判断しなくても
 品質を担保できるようにしている。
 
 ### 4. Human-on-the-Loopな運用スタイル
@@ -68,14 +98,21 @@ Human-off-the-Loopまで拡張していける余地を持たせているのも�
 
 ### はじめての人向け
 
-- [インストールマニュアル](./docs/manual/install.md)（準備中）
-- [セットアップマニュアル](./docs/manual/setup.md)（準備中）
-- [使い方チュートリアル](./docs/manual/tutorial.md)（準備中）
+- [SoloXPはなぜブランチをこう使うのか（超入門）](./docs/manual/branch-concept.md) — Git用語
+  ほぼ無しで「作業機・作業場・完成品」の比喰から仏組みを理解する
+- [ソロXPの実運用ループ](./docs/manual/actual-loop.md) — Issue起票→コード化→PR→評価→次のIssue
+  という、コード化フェーズの外側にある実際の運用ループ全体像
+- [インストールマニュアル](./docs/manual/install.md)
+- [セットアップマニュアル](./docs/manual/setup.md)
+- [使い方チュートリアル](./docs/manual/tutorial.md)
+- [Claude Code Web 環境での運用ノウハウ](./docs/manual/claude-code-web.md)
 - [`CLAUDE.md.template`](./CLAUDE.md.template) — 自分のリポジトリの `CLAUDE.md` に必要な設定一式
 
 ### 運用・仕様
 
 - [WORKFLOW.md](./WORKFLOW.md) — 詳細な運用ワークフロー・スキル一覧
+- [ブランチ・PRマージ戦略についてのメモ](./docs/manual/branch-strategy.md) — Git用語前提。
+  ブランチ命名・ベースブランチ・マージコンフリクトが起きやすい理由・Claude Code Webとの挙動差
 - [docs/spec/](./docs/spec/) — 各スキルの機能仕様書インデックス
 
 ### 過去の設計資料

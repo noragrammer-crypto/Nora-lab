@@ -1,6 +1,8 @@
 # Solo XP 運用ワークフロー
 
 > SoloXP自体の概要・特徴・ドキュメント一覧は [README.md](./README.md) を参照。
+> ブランチ命名・ベースブランチ・マージコンフリクトが起きやすい理由等の背景説明は
+> [ブランチ・PRマージ戦略についてのメモ](./docs/manual/branch-strategy.md) を参照。
 
 > **前提**: 以下のワークフローは、リポジトリルートの `CLAUDE.md` にブランチ運用・PR発行事前承認・
 > TDD原則・作業時間記録ルール等が定義されていることを前提にしています。まだ用意していない場合は
@@ -15,7 +17,7 @@ Issue 作成（ユーザー）
     ↓
 xp_Architect: サブイシュー発行
     ↓
-xp_Director: タスク1件ずつ順番に処理
+xp_Director: タス1件ずつ順番に処理
   └─ xp_Tester → xp_Implementer → xp_Auditor test → xp_Documenter → xp_Auditor doc
     ↓
 [Auditor GREEN] → 親イシューへ完了報告
