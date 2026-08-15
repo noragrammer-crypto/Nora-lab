@@ -34,7 +34,7 @@ Get all comments for an issue and markers left by Architect / xp_Director in the
 Check for either locale of the protocol markers: `[Parent branch created]` or `[親ブランチ作成済み]`, and an `## Execution plan` or `## 実行計画` comment.
 
 **Judgment criteria is marker only. Not judged based on the presence or absence of sub-issues**
-(As related tasks are manually linked to sub-issues, ``sub-issue exists = disassembled'' is a false positive.)
+(As related tasks are manually linked to sub-issues, “sub-issue exists = disassembled” is a false positive.)
 
 **If there is a marker (disassembled):**
 
@@ -104,7 +104,7 @@ Waiting for a human response does not occur) and checks for conflicts with exist
 Call the Agent tool passing the following:
 - `subagent_type`: `code-architect`
 - `prompt`: Including the purpose of the story/task, acceptance conditions, influence scope candidates (subordinates of `api/<EpicName>/`, etc.),
-Specify that ``I would like you to design it as an extension of the existing pattern without introducing a new one.''
+Specify that “I would like you to design it as an extension of the existing pattern without introducing a new one.”
 - `isolation`: Not specified (worktree is not required as it is read-only)
 
 **Mapping output to xp execution plan:**
@@ -343,7 +343,7 @@ Blocking (waiting for depends_on):
 
 ### Principle: Do not destroy the existing
 
-The architect's greatest responsibility is not to ``create something new,'' but to ``not destroy the existing design.''
+The architect's greatest responsibility is not to “create something new,” but to “not destroy the existing design.”
 The proposed design must be an **extension** of patterns that are already out there.
 
 ### Complete tracing before implementation

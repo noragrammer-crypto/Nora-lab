@@ -45,3 +45,19 @@ E2E test suite to verify acceptance conditions for story #254 "Workflow Update".
 **Given**: CLAUDE.md and xp_review_workflow/SKILL.md exist in the repository
 **When**: Run the E2E test script
 **Then**: TDD principles section (7 items) and xp_review_workflow workflow verification function (4 items) are correctly defined.
+
+---
+
+## Implementation status
+
+| Sub-issue | Description | Status |
+|---|---|---|
+| #254 | Initial implementation | Complete |
+| #2060 | Regression: wording that identifies the Issue that diverged from the ideal workflow disappeared from xp_review_workflow/SKILL.md, causing acceptance-condition 2 / test case 9 to turn RED again. Resolved by #2797 (reproduction test) and #2798 (wording restored). | Complete |
+
+## Execution results
+
+| Date | PASS | FAIL | Status |
+|---|---:|---:|---|
+| 2026-08-07 | 9 | 2 | #2060 detected: the combined “divergence” and “Issue/identify” wording had disappeared, so test case 9 became RED again. |
+| 2026-08-09 | 11 | 0 | After #2798: wording restored and all cases returned to GREEN. |

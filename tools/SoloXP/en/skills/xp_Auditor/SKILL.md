@@ -62,15 +62,17 @@ If it is a single task issue, skip E2E (no need to record).
 
 If you receive a story issue (`[Story]` tag in the title or called after AllGREEN from xp_Director), execute the following **Story-level Auditor phase**.
 
+> **Important (scope limitation)**: The criterion in section 6, “does not affect the test results of the current task,” is Task-level only. It does not apply to, or serve as an exception in, this Story-level phase. Process known REDs outside the task scope according to the ownership decision in this section.
+
 **Story-level Auditor phase (xp_Auditor test \<epic\> \<story\>)**
 
 1. Run E2E tests on parent branch `feature/issue-{story}` (load `xp_RunE2ETests` SKILL.md and follow the steps)
 
-2. For GREEN: Record `[Auditor GREEN]` in the story issue
+2. For GREEN (only when there are no blocking items owned by this story; this includes all E2E tests passing, or all remaining REDs being non-blocking items owned by other stories): Record `[Auditor GREEN]` in the story issue
 
 **Return GREEN to xp_Director. Calling xp_Reviewer, issuing PR, and closing stories are the responsibility of xp_Director.**
 
-3. For RED: File a bug issue with the contents of the failed E2E test
+3. For RED: File a bug issue with the contents of the failed E2E test and apply ownership-based asymmetric blocking
 - Before filing, check if there is already an open `bug` issue with the same content (`label:bug` of `search_issues` + keyword)
 - **If an existing issue is found**: Add a duplicate detection comment to the existing issue without publishing a new issue.
 (`workflow/docs/spec/issue-triage.md` 3-section protocol, `<!-- hot-issue-dup -->` marker required).
@@ -80,15 +82,18 @@ A subissue can only have one parent, and the parent is `add` of `mcp__github__su
 `xp_Director` Tracking is broken, so handle it as follows:
 - **If parent is not set**: Add as a sub-issue of this story. `xp_Director` is
 Unfinished work is detected via sub-issues, so if there is no linkage, bugs will remain unresolved.
-It becomes a loop of the same RED/duplicate detection comment
+It becomes a loop of the same RED/duplicate detection comment. Because this story acquired ownership:
+  - The story continues (do not close it)
+- **If the parent is this story**: This story already owns the bug, so:
+  - The story continues (do not close it)
 - **If it is already linked to another parent (another story, etc.)**: Do not replace. of another story
-Prioritize not breaking tracking and only record references to duplicate detection comments and stories.
+Prioritize not breaking tracking and only record references to duplicate detection comments and stories. If the parent is **another open story**, that story owns the bug, so the current story is **not blocked**; record only the duplicate-detection comment and continue (this resolves the mutual lock in #2807).
 Record the existing issue number as a reference in the story issue
-- **If not found**: File a new bug issue
+- **If not found**: File a new bug issue, link it as a sub-issue of this story, and acquire ownership.
 - Include `## Parent branch: feature/issue-{story}` in the body of the bug issue
 - Add the bug issue you filed as a sub-issue to the story
 - Comment the failure details and bug issue number on the story issue
-- Story continues (does not close)
+  - The story continues (does not close)
 
 4. If E2E cannot be executed: Record the `[E2E skip]` comment and leave the decision to the user (do not close automatically)
 

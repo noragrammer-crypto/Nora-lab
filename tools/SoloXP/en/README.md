@@ -58,7 +58,7 @@ Based on XP (Extreme Programming), which is a representative and pioneering appr
 
 ### 3. TDD-focused — heavier than vibe coding
 
-Because TDD is at the center of development, the system is built up little by little. On the other hand, compared to methodologies that ``quickly produce results'' like vibe coding, it is a considerably heavier method.
+Because TDD is at the center of development, the system is built up little by little. On the other hand, compared to methodologies that “quickly produce results” like vibe coding, it is a considerably heavier method.
 
 **SoloXP is especially suitable for people who find it increasingly difficult to judge whether vibe-coded output is good or bad.** By expressing acceptance criteria as tests, the workflow can protect quality without requiring a human to evaluate every individual AI response.
 
@@ -73,7 +73,7 @@ The key point is that by combining other agents for issue selection and PR merge
 
 ## Suitable for these people
 
-- People who are tired of deciding whether ``this is right'' with vibe coding
+- People who are tired of deciding whether “this is right” with vibe coding
 - People who want to leave the development to an AI agent but still have explicit quality standards such as testing
 - People who want to proceed with development on an issue-by-issue basis from environments where it is difficult to secure consistent work time, such as smartphones or cafes.
 - People who are familiar with or want to get used to the development flow on GitHub (Issue/PR based)
@@ -85,6 +85,8 @@ The key point is that by combining other agents for issue selection and PR merge
 ### For first-time users
 
 - [Why SoloXP uses branches this way (beginner introduction)](./docs/manual/branch-concept.md) — Understand the mechanism through the metaphor of a “work desk, workshop, and finished product,” with almost no Git terminology required
+- [The SoloXP operating loop](./docs/manual/actual-loop.md) — The complete operating loop outside the coding phase: creating an Issue → coding → PR → evaluation → the next Issue
+- [ProcessIssue — Issue triage and automatic selection](./docs/manual/process-issue.md) — The role of `ProcessIssue`, how to customize workflow routing, and the judgment criteria behind automatic issue selection by label
 - [Installation manual](./docs/manual/install.md)
 - [Setup manual](./docs/manual/setup.md)
 - [Usage tutorial](./docs/manual/tutorial.md)

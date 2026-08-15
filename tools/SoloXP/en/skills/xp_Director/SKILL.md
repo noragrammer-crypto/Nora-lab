@@ -66,7 +66,7 @@ Must be performed regardless of title type (`[Story]` / `[Task]` / `[Bug]` / No 
 (Since the `[Task]` issue may also be disassembled into Architect via the observable change gate. Preventing the duplicate publication accident of #1337 from happening again).
 
 **This marker is the only criterion for judgment. The presence or absence of sub-issues is not used for judgment**
-(As related tasks are manually linked to sub-issues, ``sub-issue exists = disassembled'' is a false positive.)
+(As related tasks are manually linked to sub-issues, “sub-issue exists = disassembled” is a false positive.)
 
 **If there is a marker (Architect exploded):**
 
@@ -256,7 +256,7 @@ d. After PR issuance is complete, execute the following in order and then be sur
 No further processing is performed in this run (this `/xp_Director` call).
 Do not continue performing e. below.
 
-e. [Reference/Not executed in this run] About the AllGREEN flow
+e. [Reference/Not executed in this run] AllGREEN Check · About the AllGREEN flow
 
 The following is an explanation of "When and who will detect AllGREEN and issue a parent branch PR next time".
 **Does not apply to this run (immediately after stopping at step d).**

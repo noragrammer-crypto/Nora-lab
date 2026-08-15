@@ -37,9 +37,10 @@ Test execution must be performed via the following skills:
 2. Run Unit + Functional tests via `xp_RunTestSuites`
 3. **E2E test decision (Story-level Auditor phase)**: Skip E2E for a single task issue. Run **Story-level Auditor phase** if called as `xp_Auditor test <epic> <story>` after AllGREEN from xp_Director:
    - Run E2E tests with `xp_RunE2ETests`
-   - GREEN → Record `[Auditor GREEN]` in the story issue and **return it to xp_Director**. xp_Director is responsible for calling xp_Reviewer, issuing PR, and closing stories.
-   - RED → File a bug issue and continue the story
+   - GREEN (when there are no blocking items owned by this story) → Record `[Auditor GREEN]` in the story issue and **return it to xp_Director**. xp_Director is responsible for calling xp_Reviewer, issuing PR, and closing stories.
+   - RED → File a bug issue and apply **ownership-based asymmetric blocking (#2807/#2809)**: block when this story owns the existing bug issue, or acquires ownership because it has no parent; do not block when its parent is **another open story** (only record the duplicate-detection comment and continue, avoiding the mutual lock described in #2807).
    - E2E cannot be executed → `[E2E Skip]` Record the comment and leave it to the user
+   - **Scope limitation (#2784)**: the “separate task scope” criterion in step 4 (which does not affect the current task's test result) is Task-level only. It does not apply to, or serve as an exception in, the Story-level Auditor phase; process known REDs outside the task scope according to the ownership decision above.
 
 4. Determine the scope for each FAIL test:
    - **Within the same task scope**: Returned to Implementer

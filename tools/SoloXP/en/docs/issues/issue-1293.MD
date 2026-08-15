@@ -8,7 +8,7 @@ issue: 1293 title: "[Bug] SoloXP/tests/e2e/'s Jest test is skipped when xp_RunE2
 
 ## overview
 
-The `SoloXP/tests/e2e/` test is a test that verifies the contents of the SKILL.md file with Jest, and does not require deployment to Vercel. However, the `xp_RunE2ETests` skill follows the Playwright-based flow of ``Confirm communication with Vercel preview URL → `BASE_URL` settings → E2E execution.'' Due to this mismatch, tests that do not need to be deployed continue to be skipped due to communication failures.
+The `SoloXP/tests/e2e/` test is a test that verifies the contents of the SKILL.md file with Jest, and does not require deployment to Vercel. However, the `xp_RunE2ETests` skill follows the Playwright-based flow of “Confirm communication with Vercel preview URL → `BASE_URL` settings → E2E execution.” Due to this mismatch, tests that do not need to be deployed continue to be skipped due to communication failures.
 
 ## depends_on
 

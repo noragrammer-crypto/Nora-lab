@@ -7,7 +7,7 @@ issue: 1698 title: "[Task] ops-meeting Added status check of previous proposal" 
 ## Body
 
 ## overview
-Read the previous `data/ops-meeting/*.json` (persisted with #1697) and check whether the issue corresponding to the previous proposal has been `[Auditor GREEN]` and closed. Added confirmation of ``I did it/didn't do it/why'' as a mandatory item to the critic phase prompt, and asked ``Why didn't it move?'' in areas where there was little change from the previous week.
+Read the previous `data/ops-meeting/*.json` (persisted with #1697) and check whether the issue corresponding to the previous proposal has been `[Auditor GREEN]` and closed. Added confirmation of “I did it/didn't do it/why” as a mandatory item to the critic phase prompt, and asked “Why didn't it move?” in areas where there was little change from the previous week.
 
 ## estimate
 3pt — Previous proposal reflection status check logic + Critic prompt modification

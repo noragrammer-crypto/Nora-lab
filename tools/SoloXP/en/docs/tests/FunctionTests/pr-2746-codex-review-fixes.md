@@ -8,7 +8,7 @@ Codex automatic review has raised two P2 points for PR #2746, which merges Story
 
 ### Point 1: `sync-nora-lab` in `SoloXP/Makefile` does not propagate copy failures
 
-Even if `cp` fails in the `find ... | while read ...; do cp ...; done` loop, the loop itself will continue, and if the last iteration was successful, the exit status of the entire `while` will be 0, and make will appear to have succeeded. ``✅ Synchronization complete'' is displayed while the synchronization destination is incomplete.
+Even if `cp` fails in the `find ... | while read ...; do cp ...; done` loop, the loop itself will continue, and if the last iteration was successful, the exit status of the entire `while` will be 0, and make will appear to have succeeded. “✅ Synchronization complete” is displayed while the synchronization destination is incomplete.
 The same type of accident as the "silent omission of file names containing spaces" fixed in #2734 may occur again through a different route.
 
 **Fixed**: Added `set -e -o pipefail` to the beginning of the recipe and appended `|| exit 1` to the `cp` call.

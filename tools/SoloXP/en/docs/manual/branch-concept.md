@@ -28,7 +28,7 @@ Small work desk completed
 
 You make one part (sub-task) on a small work desk, transport it to a large workshop, repeat the process, and when all parts are assembled and pass inspection (test/audit), they are reflected in the finished product storage area (`main`) for the first time.
 
-> The diagram above shows the shape of ``when a large task (`[Story]`/`[Bug]`) is divided into multiple parts.''
+> The diagram above shows the shape of “when a large task (`[Story]`/`[Bug]`) is divided into multiple parts.”
 > If it is a one-off small task (`[Task]`), it can be done from a small work desk without going through a large work area.
 > It may be reflected directly in the finished product storage area (`main`).
 
@@ -60,12 +60,12 @@ main ─── A ─ X ─ Y
            Workshop ─ B ─ C ─ D
 ```
 
-In the workshop, parts B, C, and D are being assembled, but in the meantime, another change, X and Y, is being made in the finished product storage area. This ``Is there a conflict between X and Y and the contents of the workshop (are the same locations rewritten separately?'') is checked when it is finally reflected in the finished product storage area.
+In the workshop, parts B, C, and D are being assembled, but in the meantime, another change, X and Y, is being made in the finished product storage area. This “Is there a conflict between X and Y and the contents of the workshop (are the same locations rewritten separately?”) is checked when it is finally reflected in the finished product storage area.
 
 **If there is no collision, just reflect it and finish. If there is a collision, move X and Y to the work area.
 It is necessary to resolve conflicts after importing them.**
 
-This operation of ``incorporating new changes from the finished product storage area into the work area and resolving discrepancies'' is named `merge` and `rebase` (if there are no conflicts, this operation itself is often unnecessary).
+This operation of “incorporating new changes from the finished product storage area into the work area and resolving discrepancies” is named `merge` and `rebase` (if there are no conflicts, this operation itself is often unnecessary).
 
 ## "Collision" = Merge conflict
 
@@ -77,12 +77,12 @@ Even when using SoloXP alone, this happens when:
 - While making multiple parts (sub-tasks) in order in the workshop, over time the finished product storage area is
   I've moved on
 
-``A conflict occurred even though only one person was using it'' is not an abnormal situation, but a normal occurrence in the operation of SoloXP.
+“A conflict occurred even though only one person was using it” is not an abnormal situation, but a normal occurrence in the operation of SoloXP.
 
 ## What to do if you get stuck?
 
 In most cases, a coding agent (Claude Code / Codex, etc.) automatically handles the above import and conflict resolution. There is no need for humans to be aware of this every time.
 
-However, when an agent says things like ``There is a conflict'' or ``The workshop is older than the finished product storage area,'' it is enough if you can imagine that they are ``in the process of importing X and Y into the workshop'' as shown in the diagram above.
+However, when an agent says things like “There is a conflict” or “The workshop is older than the finished product storage area,” it is enough if you can imagine that they are “in the process of importing X and Y into the workshop” as shown in the diagram above.
 
 For a more detailed mechanism (actual branch naming method, commands, differences in behavior on Claude Code Web, etc.), see [Memo about branch/PR merge strategy](./branch-strategy.md).

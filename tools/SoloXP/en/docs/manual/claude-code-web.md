@@ -4,7 +4,7 @@ The author has mainly tested the **Claude Code Web version** (see "Supported Pla
 
 ## 1. About GitHub authentication
 
-If you set a GitHub token (`GH_TOKEN`, etc.) in the ``Environment variables'' of Claude Code Web's session creation screen, it will be automatically available when the session starts. `gh auth login` is not required.
+If you set a GitHub token (`GH_TOKEN`, etc.) in the “Environment variables” of Claude Code Web's session creation screen, it will be automatically available when the session starts. `gh auth login` is not required.
 
 ### Be careful of false positives of `gh auth status`
 
@@ -36,7 +36,7 @@ The SoloXP workflow itself does not depend on the presence or absence of a deplo
 
 ### Token settings
 
-By setting the API token of the deployment destination (`VERCEL_TOKEN` for Vercel) in the Claude Code Web session creation screen ``Environment variables'', you can obtain the deployment status and preview URL via the API.
+By setting the API token of the deployment destination (`VERCEL_TOKEN` for Vercel) in the Claude Code Web session creation screen “Environment variables”, you can obtain the deployment status and preview URL via the API.
 
 ```bash
 # Example of authentication confirmation (Vercel)
@@ -96,9 +96,9 @@ The specific settings will vary depending on the browser automation tool and exe
 
 ## 5. Synchronization when skill files are stored in multiple locations
 
-If you plan to place the SoloXP skill definition (`skills/xp_*/SKILL.md`) in both the project scope (`.claude/skills/`) and the personal scope (`~/.claude/skills/`), or if you plan to use it in multiple repositories, etc., set up an operation where there are multiple locations. If you enable manual editing in both directions, accidents can easily occur, such as ``you won't know which one is the latest,'' or ``only one side will be updated and the functionality will conflict.''
+If you plan to place the SoloXP skill definition (`skills/xp_*/SKILL.md`) in both the project scope (`.claude/skills/`) and the personal scope (`~/.claude/skills/`), or if you plan to use it in multiple repositories, etc., set up an operation where there are multiple locations. If you enable manual editing in both directions, accidents can easily occur, such as “you won't know which one is the latest,” or “only one side will be updated and the functionality will conflict.”
 
-Synchronization can be implemented in any way (copy script, git hook, symbolic link, etc.). When using symbolic links, be aware that if you combine this with the operation of exporting files over the history to another repository using `git subtree`, etc., the string itself, rather than the actual link destination, will be carried and the link will become broken (see also the note on ``When using symbolic links'' in the [Installation Manual](./install.md)).
+Synchronization can be implemented in any way (copy script, git hook, symbolic link, etc.). When using symbolic links, be aware that if you combine this with the operation of exporting files over the history to another repository using `git subtree`, etc., the string itself, rather than the actual link destination, will be carried and the link will become broken (see also the note on “When using symbolic links” in the [Installation Manual](./install.md)).
 
 ## Related documents
 

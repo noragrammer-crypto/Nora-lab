@@ -38,6 +38,11 @@ The type of issue (Story/Task/Bug) itself is determined not by the label but by 
 > Just adding the `task` label does not make it a Task flow (Architect bypass). Architect
 > Do not confuse the title tag `[Task]` to be bypassed and the label `task` attached to a sub-issue as they are different.
 
+If you also adopt `ProcessIssue` (the automatic issue-selection layer), you will additionally use the
+`backlog` / `block` / `ignore` labels that exclude an issue from selection, and the `env/*` labels that
+control which environment an issue may run in. The criteria for choosing between them are collected in
+[ProcessIssue — Issue triage and automatic selection](./process-issue.md).
+
 If a label does not exist, xp_Architect automatically creates it using `gh label create` when issuing a sub-issue, so it is not necessary to prepare it manually in advance. However, the first run will fail if you do not have label creation privileges, so make sure you are participating in the repository with repository administrator privileges (or privileges that are allowed to create labels).
 
 ## 3. Project test environment

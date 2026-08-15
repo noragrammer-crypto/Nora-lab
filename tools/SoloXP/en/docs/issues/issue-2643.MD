@@ -67,7 +67,7 @@ FAIL __tests__/functional/issue-2643-nora-lab-publish-link-check.functional.test
 
 RED as expected (`workflow/scripts/check-relative-links.js` not implemented, `Nora-lab/tools/SoloXP/Ja` not synchronized). Hand over to Implementer.
 
-Note: The synchronization mechanism of `make sync-nora-lab` itself (exclusion targets, file names with spaces, deletion reflection) has already been sandbox verified in #2642 `SoloXP/tests/functional/issue-2642-makefile-sync-nora-lab.functional.test.js`, so in this task we focused on ``actual public execution'' and ``broken link verification'' without duplicating it.
+Note: The synchronization mechanism of `make sync-nora-lab` itself (exclusion targets, file names with spaces, deletion reflection) has already been sandbox verified in #2642 `SoloXP/tests/functional/issue-2642-makefile-sync-nora-lab.functional.test.js`, so in this task we focused on “actual public execution” and “broken link verification” without duplicating it.
 
 ### Comment 3 (2026-08-07 08:47 JST)
 

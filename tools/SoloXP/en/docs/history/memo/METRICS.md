@@ -166,7 +166,7 @@ Expected consumption pattern:
 - 2 cores, 24-hour operation: 720 hours/month → significantly exceeded
 - 4 cores, 1 hour a day operation: 60 hours/month → Barely
 
-Conclusion: ``Start it only when you have work to do'' is essential.
+Conclusion: “Start it only when you have work to do” is essential.
 ```
 
 #### Claude API (assumes Pro membership)

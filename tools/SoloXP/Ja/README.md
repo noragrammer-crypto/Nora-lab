@@ -102,6 +102,8 @@ Human-off-the-Loopまで拡張していける余地を持たせているのも�
   ほぼ無しで「作業机・作業場・完成品」の比喩から仕組みを理解する
 - [ソロXPの実運用ループ](./docs/manual/actual-loop.md) — Issue起票→コード化→PR→評価→次のIssue
   という、コード化フェーズの外側にある実際の運用ループ全体像
+- [ProcessIssue ── イシュートリアージと自動選択](./docs/manual/process-issue.md) —
+  `ProcessIssue` の役割・ワークフロー振り分けのカスタマイズ、ラベルによるイシュー自動選択の判断基準
 - [インストールマニュアル](./docs/manual/install.md)
 - [セットアップマニュアル](./docs/manual/setup.md)
 - [使い方チュートリアル](./docs/manual/tutorial.md)

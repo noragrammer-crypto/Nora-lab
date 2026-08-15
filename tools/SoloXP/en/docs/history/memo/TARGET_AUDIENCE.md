@@ -16,7 +16,7 @@ Constraints │ ⭐Solo XP optimal │ → Clogged
         │ │ Solo XP effect weak
 ```
 
-**Solo XP shines in the ``I don't have money but I don't have time''**
+**Solo XP shines in the “I don't have money but I don't have time”**
 
 ## Primary Target: Digital Farmer
 

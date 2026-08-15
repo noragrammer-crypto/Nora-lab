@@ -56,11 +56,17 @@ Private側の履歴を再投影する必要はない。必要なのは「公開H
 | `Makefile` | 本Makefile自体 |
 | `tests` | `SoloXP/tests/` はモノレポ構造（`dotfiles/`・`.claude/hooks/pre-push.sh`・`SoloXP/Makefile`自体等）への相対パス依存が大半で、公開先単体（`Nora-lab/tools/SoloXP/Ja`）にコピーすると `REPO_ROOT` の解決先がずれて `ENOENT` になる（Nora-lab PR #20 Codexレビュー指摘、#2643）。テスト内容は `docs/tests/{UnitTests,FunctionTests,E2ETests}/` のドキュメントとして公開側でも参照可能なため、実行可能な形での公開は行わずソースのみ除外する |
 
-### `workflow/skills/ProcessIssue` の追加同期
+### `workflow/skills/ProcessIssue` / `workflow/skills/ProcessCodexIssue` の追加同期
 
 `ProcessIssue` は Solo XP フレームワーク実行に必要な workflow 全体のトリアージ役だが、`SoloXP/` の
 外（`workflow/skills/`）に配置されているため、`SoloXP/` 本体のコピーとは別に
 `Nora-lab/tools/SoloXP/Ja/skills/ProcessIssue/` へ追加でコピーする。
+
+`ProcessCodexIssue` は `ProcessIssue` のワークフロー4（Codex自動レビューイシューの処理）が
+委譲する先のスキルであり、同じく `workflow/skills/` 配下にある。`ProcessIssue` だけを同期して
+`ProcessCodexIssue` を同期しないと、公開パッケージ側でワークフロー4が存在しないコマンドへの
+委譲で行き詰まる（#2917 Codexレビュー指摘）ため、`Nora-lab/tools/SoloXP/Ja/skills/ProcessCodexIssue/`
+へ同様に追加でコピーする。
 
 ### `package.json` のテスト関連設定除去
 

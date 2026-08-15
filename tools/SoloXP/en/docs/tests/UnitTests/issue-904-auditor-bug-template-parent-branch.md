@@ -16,7 +16,7 @@ Verify that the bug issue template automatically raised by xp_Auditor includes t
 
 | Test case | Type | Content |
 |---|---|---|
-| ``When a bug is discovered in another task scope'' section exists | Normal system | ``When a bug is discovered in another task scope'' section exists in SKILL.md |
+| “When a bug is discovered in another task scope” section exists | Normal system | “When a bug is discovered in another task scope” section exists in SKILL.md |
 | The gh issue create template contains the ## parent story section | Normal | The bug report template contains the `## parent story` field |
 | The gh issue create template contains the ## parent branch section | Normal | The bug report template has the `## parent branch` field |
 

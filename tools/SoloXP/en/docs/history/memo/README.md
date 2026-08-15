@@ -2,7 +2,7 @@
 
 This directory contains study materials, minutes, and drafts created during the initial design phase of the Solo XP framework. **All of these differ from the current implementation and should not be referred to as operational documentation.** For current operation, refer to [`../../../WORKFLOW.md`](../../../WORKFLOW.md) and [`../../spec/`](../../spec/).
 
-Because it has the value of an ADR (Architecture Decision Record) that records the history of decision-making, it is not deleted, but is saved here as a ``past record that is safe to rot.''
+Because it has the value of an ADR (Architecture Decision Record) that records the history of decision-making, it is not deleted, but is saved here as a “past record that is safe to rot.”
 
 ## Recorded files
 

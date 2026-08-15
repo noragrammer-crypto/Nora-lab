@@ -94,6 +94,7 @@ Example of confirmation observation:
 ### 3. Identify the single most divergent log
 
 Even if multiple deviations are found, select only the one with the largest deviation from the ideal workflow.
+This step also identifies the Issue that has diverged from the ideal workflow.
 
 Selection criteria (in order of priority):
 1. Significant deviation from expected achievement conditions (complete missing phase, repeated loops, etc.)

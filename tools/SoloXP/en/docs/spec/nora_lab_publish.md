@@ -4,7 +4,7 @@ Synchronization and publication procedure for publishing the SoloXP framework it
 
 ## Overall design (#2761)
 
-Continuous synchronization is divided into three roles: ``Initial separation,'' ``Private→Public,'' and ``Public→Private,'' and each is handled differently.
+Continuous synchronization is divided into three roles: “Initial separation,” “Private→Public,” and “Public→Private,” and each is handled differently.
 
 | Role | Frequency | Means |
 |---|---|---|
@@ -14,11 +14,11 @@ Continuous synchronization is divided into three roles: ``Initial separation,'' 
 
 ### Why did I recreate the continuation synchronization (accident on 2026-08-06)
 
-`git subtree push` (split method) traces ``all commits that touched `Nora-lab/` at least once'' along the ancestor graph. Once the public repository already has an independent history and is also being worked directly on, there is no need to reproject the private history on each continuous sync. All that is required is to ``accumulate the difference between the current snapshot and the public HEAD by one commit.''
+`git subtree push` (split method) traces “all commits that touched `Nora-lab/` at least once” along the ancestor graph. Once the public repository already has an independent history and is also being worked directly on, there is no need to reproject the private history on each continuous sync. All that is required is to “accumulate the difference between the current snapshot and the public HEAD by one commit.”
 
 However, in the old method (using `git subtree split --prefix=Nora-lab` for continuous synchronization), if an unrelated accident occurs on the main body side (accidental deletion of PR #2426 → revert of PR #2428), the revert commit will also touch the `Nora-lab/` path, and from the perspective of `git subtree split`, the entire history of the main body will be treated as "commits related to `Nora-lab/`". (Includes AIchats bulk sync commit in March, Discord token) as its ancestor. `git subtree push` on 2026-08-06 dutifully carried this tainted ancestor graph to the public repository (details: #2761).
 
-As a result of testing the reactive response (#2760) of ``delete `Nora-lab/` with `git rm -r` → re-add it with `git subtree add --squash`,'' it was found that the contamination line could not be isolated. As long as you pile up new commits on the same branch, you can't create boundaries because the new commits themselves have the entire history of the body as ancestors (see comment #2760).
+As a result of testing the reactive response (#2760) of “delete `Nora-lab/` with `git rm -r` → re-add it with `git subtree add --squash`,” it was found that the contamination line could not be isolated. As long as you pile up new commits on the same branch, you can't create boundaries because the new commits themselves have the entire history of the body as ancestors (see comment #2760).
 
 **Conclusion: Eliminate the operation of "tracing the history of the main body as an ancestor graph" (subtree split/push) from continuous synchronization itself.**
 
@@ -26,7 +26,7 @@ As a result of testing the reactive response (#2760) of ``delete `Nora-lab/` wit
 
 **Implementation**: `SoloXP/Makefile`
 
-Synchronize the original (the entire `SoloXP/` + `workflow/skills/ProcessIssue`) to `Nora-lab/tools/SoloXP/Ja`. The implementation/design of this step is not changed by #2761 (as before).
+Synchronize the original (the entire `SoloXP/` + `workflow/skills/ProcessIssue` + `workflow/skills/ProcessCodexIssue`) to `Nora-lab/tools/SoloXP/Ja`. The implementation/design of this step is not changed by #2761 (as before).
 
 - Since the synchronization destination is recreated with `rm -rf` and then the actual copy is made with `cp -r`, files that have been deleted on the original side are also deleted.
   Disappears from the synchronization destination (equivalent to `--delete`)
@@ -44,9 +44,11 @@ Synchronize the original (the entire `SoloXP/` + `workflow/skills/ProcessIssue`)
 | `Makefile` | This Makefile itself |
 | `tests` | `SoloXP/tests/` mostly depends on the relative path to the monorepo structure (`dotfiles/`, `.claude/hooks/pre-push.sh`, `SoloXP/Makefile` itself, etc.), and if you copy it to the single publication destination (`Nora-lab/tools/SoloXP/Ja`), the resolution destination of `REPO_ROOT` will be shifted and `ENOENT` (Nora-lab PR #20 Codex review pointed out, #2643). Since the test content can be referenced by the publishing side as a document in `docs/tests/{UnitTests,FunctionTests,E2ETests}/`, only the source is excluded without publishing it in an executable form |
 
-### Additional synchronization of `workflow/skills/ProcessIssue`
+### Additional synchronization of `workflow/skills/ProcessIssue` / `workflow/skills/ProcessCodexIssue`
 
 `ProcessIssue` serves as a triage for the entire workflow required to run the Solo XP framework, but since it is located outside of `SoloXP/` (`workflow/skills/`), it is additionally copied to `Nora-lab/tools/SoloXP/Ja/skills/ProcessIssue/` in addition to the copy of `SoloXP/` itself.
+
+`ProcessCodexIssue` is the skill that `ProcessIssue`'s Workflow 4 (Codex automated-review issues) delegates to, and it lives alongside `ProcessIssue` under `workflow/skills/`. Syncing `ProcessIssue` alone without also syncing `ProcessCodexIssue` would leave the published package delegating to a command that doesn't exist there (Codex review finding on #2917), so it is likewise additionally copied to `Nora-lab/tools/SoloXP/Ja/skills/ProcessCodexIssue/`.
 
 ### Removal of test-related settings from `package.json`
 
@@ -72,7 +74,7 @@ Skip push if there is no difference (no-op).
 
 ### Why this method structurally prevents accidents from occurring
 
-`git subtree split/push` traces ``which commit in the main repository touched `Nora-lab/`'' from the entire commit graph of the main repository. If an unrelated accident (accidental deletion, revert, etc.) on the main body side touches the `Nora-lab/` path, a contaminated ancestor graph will be mixed into the calculation.
+`git subtree split/push` traces “which commit in the main repository touched `Nora-lab/`” from the entire commit graph of the main repository. If an unrelated accident (accidental deletion, revert, etc.) on the main body side touches the `Nora-lab/` path, a contaminated ancestor graph will be mixed into the calculation.
 
 `publish-nora-lab.sh` does not refer to the `.git` history of the main repository as an ancestor. All it has as an ancestor is the one public HEAD at the time of cloning.
 
@@ -95,7 +97,7 @@ Even if there are changes that are directly pushed/PRed on the publishing side (
 
 ### About running ClaudeCode in a web session
 
-ClaudeCode web sessions have outbound `git push` blocked by proxy (`git push` to a repository outside the GitHub MCP scope results in a 403, see `Nora-lab/CLAUDE.md`). In this case, an alternative procedure to achieve the same design principle of "one commit based on public HEAD standards" using the GitHub Contents API (`GET/PUT /repos/.../contents/<path>` + `POST /repos/.../pulls`) is described in `Nora-lab/CLAUDE.md` ``Syncing from Claude Code Web.'' Both methods have the same design principle of ``not tracing the history of the main body,'' and the only difference is the implementation (transport) due to differences in the environment.
+ClaudeCode web sessions have outbound `git push` blocked by proxy (`git push` to a repository outside the GitHub MCP scope results in a 403, see `Nora-lab/CLAUDE.md`). In this case, an alternative procedure to achieve the same design principle of "one commit based on public HEAD standards" using the GitHub Contents API (`GET/PUT /repos/.../contents/<path>` + `POST /repos/.../pulls`) is described in `Nora-lab/CLAUDE.md` “Syncing from Claude Code Web.” Both methods have the same design principle of “not tracing the history of the main body,” and the only difference is the implementation (transport) due to differences in the environment.
 
 ## Initial split (`git subtree split`) — one-time operation, not used for continuous synchronization
 
