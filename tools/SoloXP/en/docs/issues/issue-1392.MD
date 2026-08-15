@@ -83,7 +83,7 @@ Start of work 2026-06-27 06:49
 
 ## Test execution results
 
-Since the implementation content of this task was to ``modify the test file itself,'' xp_Tester directly modified the three files (no need to hand over to xp_Implementer).
+Since the implementation content of this task was to “modify the test file itself,” xp_Tester directly modified the three files (no need to hand over to xp_Implementer).
 
 ### Correction details
 

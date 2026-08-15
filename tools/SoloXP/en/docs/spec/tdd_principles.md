@@ -14,7 +14,7 @@ Bug fixes can be completed from test creation to GREEN in one task and one PR. D
 
 ### 2. Be sure to capitalize and commit bug reproduction tests
 
-Be sure to commit tests that reproduce the bug and turn them into assets. Record the fact that it was ``reproducible'' as a code.
+Be sure to commit tests that reproduce the bug and turn them into assets. Record the fact that it was “reproducible” as a code.
 
 ### 3. One Task One PR
 
@@ -59,12 +59,12 @@ Tests that assert the text, heading numbers, and code block text of SKILL.md as 
 - Check the existence of reference file path (`fs.existsSync`)
 - Index consistency between documents (such as whether the files listed in the README actually exist)
 - `dotfiles/.claude/skills/` generated from the original book (`SoloXP/skills/xp_*` + `workflow/skills/*`, total 38 skills)
-  Confirm that the entries on the `.claude/skills/` side match the contents of the corresponding original (updated to the expression after reversing the synchronization direction in #2168/#2639/#2640). Since `.claude/skills/` also contains non-target skills (approximately 11 skills such as `wiki_ingest` and `NovelGeneratorRun`) that do not have the original copy, the comparison target is limited to the 38 skill entries generated from the original copy (see `docs/skill-files-sync.md` ``Excluded Skills'' section)
+  Confirm that the entries on the `.claude/skills/` side match the contents of the corresponding original (updated to the expression after reversing the synchronization direction in #2168/#2639/#2640). Since `.claude/skills/` also contains non-target skills (approximately 11 skills such as `wiki_ingest` and `NovelGeneratorRun`) that do not have the original copy, the comparison target is limited to the 38 skill entries generated from the original copy (see `docs/skill-files-sync.md` “Excluded Skills” section)
 
 **Rejection/rewriting judgment flow**:
 1. If the test relies on text/heading numbers, consider whether it is possible to redefine the contract you want to verify.
    - If the contract is "existence of section", rewrite it to a flexible match of the heading keyword
-   - If the contract is ``the text of specific operating procedures'', give up on guarantees based on testing,
+   - If the contract is “the text of specific operating procedures”, give up on guarantees based on testing,
      SKILL.md Leave the test to the responsibility of the reviewer (Auditor/human) and delete the test.
 2. When it is necessary to guarantee the wording itself (procedural statements that cannot be removed for operational reasons),
    Leave it explicitly as a "word test" and make it an operational rule to update with the same PR when changing SKILL.md

@@ -24,7 +24,7 @@ Replacement for `xp_Documenter`. **Delegating network (GitHub API) independent p
 
 ## Why this division?
 
-`codex exec --sandbox workspace-write` has limited network access. `xp_issue2md` (obtains issue text and comments with `gh issue view`) and `xp_doc_spec` (also refers to the issue history and resynchronizes the `state` of the related issue table with the actual state on GitHub) cannot be delegated to Codex because they require live access to the GitHub API. On the other hand, `xp_doc_reference` / `xp_doc_UnitTests` / `xp_doc_FunctionTests` / `xp_doc_E2ETests` can be completed by simply ``reading local code, test files, and existing docs, and writing markdown that reflects them'' and does not require the GitHub API, so they can be safely delegated to Codex.
+`codex exec --sandbox workspace-write` has limited network access. `xp_issue2md` (obtains issue text and comments with `gh issue view`) and `xp_doc_spec` (also refers to the issue history and resynchronizes the `state` of the related issue table with the actual state on GitHub) cannot be delegated to Codex because they require live access to the GitHub API. On the other hand, `xp_doc_reference` / `xp_doc_UnitTests` / `xp_doc_FunctionTests` / `xp_doc_E2ETests` can be completed by simply “reading local code, test files, and existing docs, and writing markdown that reflects them” and does not require the GitHub API, so they can be safely delegated to Codex.
 
 ---
 

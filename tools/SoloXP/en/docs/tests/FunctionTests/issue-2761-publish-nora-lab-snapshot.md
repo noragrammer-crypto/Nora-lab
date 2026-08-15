@@ -6,7 +6,7 @@
 
 Verify on the actual temporary git environment (bare repository acting as a public repository + snapshot directory) that the continuous synchronization has been switched to a method of cloning a public repository with `--depth 1` and loading only one commit instead of using `git subtree push` (Issue #2761).
 
-This directly proves that the new method is structurally impossible to recur the ``accident in which the main body's private history (including AIchats/bulk sync commits and Discord tokens) was leaked to the public repository via the ancestor graph of `git subtree push`'' that occurred on 2026-08-06.
+This directly proves that the new method is structurally impossible to recur the “accident in which the main body's private history (including AIchats/bulk sync commits and Discord tokens) was leaked to the public repository via the ancestor graph of `git subtree push`” that occurred on 2026-08-06.
 
 ## Test file
 

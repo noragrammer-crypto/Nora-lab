@@ -8,7 +8,7 @@ issue: 1247 title: "[Task] Remove PR issue procedure from xp_Auditor/SKILL.md/Sy
 
 ## overview
 
-Fixed bug #1238. Delete the `gh pr create` and `xp_Reviewer` calls that remain in the Story-level GREEN phase of `xp_Auditor/SKILL.md` and clearly state that ``PR issuance is the responsibility of xp_Director.'' Synchronize all copies.
+Fixed bug #1238. Delete the `gh pr create` and `xp_Reviewer` calls that remain in the Story-level GREEN phase of `xp_Auditor/SKILL.md` and clearly state that “PR issuance is the responsibility of xp_Director.” Synchronize all copies.
 
 ## Things to do
 

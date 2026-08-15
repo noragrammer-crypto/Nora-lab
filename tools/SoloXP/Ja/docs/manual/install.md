@@ -1,6 +1,7 @@
 # インストールマニュアル
 
-SoloXPのスキル（`skills/xp_*`）を自分のリポジトリ・Claude Code環境に導入する手順。
+SoloXPのスキル（`skills/xp_*`・`skills/ProcessIssue`・`skills/ProcessCodexIssue`）を自分の
+リポジトリ・Claude Code環境に導入する手順。
 
 > 前提として [Claude Code](https://claude.com/product/claude-code)（CLI版・Web版のどちらでも可）が使える状態であること。
 > `gh` CLI・Node/npm 等の周辺ツールの準備は [セットアップマニュアル](./setup.md) を参照。
@@ -26,14 +27,22 @@ Claude Codeはスキルを2種類のスコープで認識する。どちらか�
 | プロジェクトスコープ | `<リポジトリルート>/.claude/skills/<スキル名>/SKILL.md` | そのリポジトリのみ |
 | 個人スコープ | `~/.claude/skills/<スキル名>/SKILL.md` | 実行環境上の全リポジトリ |
 
-`SoloXP/skills/` 配下の各ディレクトリ（`xp_Director`・`xp_Architect`・`xp_Tester` 等）が、
-そのまま1スキル1ディレクトリに対応している。登録は「コピー」でも「シンボリックリンク」でも良い。
+`SoloXP/skills/` 配下の各ディレクトリ（`xp_Director`・`xp_Architect`・`xp_Tester`・`ProcessIssue`・
+`ProcessCodexIssue` 等）が、そのまま1スキル1ディレクトリに対応している。登録は「コピー」でも
+「シンボリックリンク」でも良い。
+
+> `ProcessIssue`・`ProcessCodexIssue` は `xp_*` と役割が異なる。`xp_Director`（引数なし）は
+> 呼ばれると直ちに `/ProcessIssue` に処理を委譲する（イシュー選択・振り分けロジック自体は
+> `ProcessIssue` 側にある）。さらに `ProcessIssue` は、Codexの自動レビューから生成されたイシュー
+> を検出すると `/ProcessCodexIssue` に処理を委譲する。**`xp_*` だけを登録すると、`xp_Director`
+> の自動選択の入口（引数なし呼び出し）が動作しない**ため、`ProcessIssue`・`ProcessCodexIssue`
+> も忘れずに登録すること（詳細: [ProcessIssue ── イシュートリアージと自動選択](./process-issue.md)）。
 
 ### コピーする場合（シンプル・環境非依存）
 
 ```bash
 mkdir -p .claude/skills
-for d in SoloXP/skills/xp_*; do
+for d in SoloXP/skills/xp_* SoloXP/skills/ProcessIssue SoloXP/skills/ProcessCodexIssue; do
   cp -r "$d" ".claude/skills/$(basename "$d")"
 done
 ```
@@ -44,7 +53,7 @@ SoloXP側を更新したら都度コピーし直す必要がある。
 
 ```bash
 mkdir -p .claude/skills
-for d in "$(pwd)"/SoloXP/skills/xp_*; do
+for d in "$(pwd)"/SoloXP/skills/xp_* "$(pwd)"/SoloXP/skills/ProcessIssue "$(pwd)"/SoloXP/skills/ProcessCodexIssue; do
   ln -s "$d" ".claude/skills/$(basename "$d")"
 done
 ```

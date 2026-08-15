@@ -8,7 +8,7 @@ issue: 1532 title: "[Enhancement] xp_doc_spec/UnitTests/FunctionTests/E2ETests o
 
 ## How it was discovered
 
-When checking the target of `xp_doc_spec` in the Documenter step of #1528 (CodeCompass test directory unification), it was incorrectly determined that ``the `spec/` directory does not exist, so it is not targeted.'' Actually, `CodeCompass/docs/spec/` exists, and the cause of the misjudgment was the path assumption on the skill side.
+When checking the target of `xp_doc_spec` in the Documenter step of #1528 (CodeCompass test directory unification), it was incorrectly determined that “the `spec/` directory does not exist, so it is not targeted.” Actually, `CodeCompass/docs/spec/` exists, and the cause of the misjudgment was the path assumption on the skill side.
 
 ## Problem
 

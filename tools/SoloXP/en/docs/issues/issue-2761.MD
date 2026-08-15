@@ -6,7 +6,7 @@
 
 Before executing `git subtree push --prefix=Nora-lab`, there was no mechanism to detect whether the ancestor history of `Nora-lab/` was mixed with the private commit history of HolyAutomater itself. On 2026-08-06, an accident occurred where the main body's private history (including AIchats bulk sync commits from 2026-03 and Discord Bot tokens) was leaked to the main of the public repository `noragrammer-crypto/Nora-lab` (see the GitHub issue text for details).
 
-In an additional comment after the accident was discovered, it was demonstrated that even after the fact (PR #2760), ``delete `Nora-lab/` with `git rm -r` → re-add it with `git subtree add --squash'', the contaminated system could not be isolated, and a policy was decided to ``abolish `git subtree push` (history-preserving method) from continuous synchronization itself'' as a permanent solution.
+In an additional comment after the accident was discovered, it was demonstrated that even after the fact (PR #2760), “delete `Nora-lab/` with `git rm -r` → re-add it with `git subtree add --squash”, the contaminated system could not be isolated, and a policy was decided to “abolish `git subtree push` (history-preserving method) from continuous synchronization itself” as a permanent solution.
 
 ## Determined response policy (scope of this issue)
 
@@ -18,7 +18,7 @@ Re-design "initial separation" and "continuation synchronization" as different t
 | Continue Private → Public | Each time | Public HEAD standard snapshot/diff commit (newly established: `make publish-nora-lab`) |
 | Continue Public → Private | Each time | `git subtree pull --prefix=Nora-lab nora-lab main --squash` (no change) |
 
-Once the public repository already has a separate history and is also being worked directly on, there is no need to "reproject the private history" (=subtree split/push) every time you perform a continuous sync. All you need to do is set the public HEAD as the parent and accumulate one commit of the difference with the current snapshot. Since this method ``does not refer to the main body's `.git` history at all,'' it is structurally impossible for the ancestor graph to be transferred to the public side even if any accident (accidental deletion, revert, etc.) occurs on the main body side. With this redesign, the ``pre-check to detect contamination'' that was part of the original acceptance condition will be replaced with a design that ``prevents contamination from occurring'' instead of ``detecting it.''
+Once the public repository already has a separate history and is also being worked directly on, there is no need to "reproject the private history" (=subtree split/push) every time you perform a continuous sync. All you need to do is set the public HEAD as the parent and accumulate one commit of the difference with the current snapshot. Since this method “does not refer to the main body's `.git` history at all,” it is structurally impossible for the ancestor graph to be transferred to the public side even if any accident (accidental deletion, revert, etc.) occurs on the main body side. With this redesign, the “pre-check to detect contamination” that was part of the original acceptance condition will be replaced with a design that “prevents contamination from occurring” instead of “detecting it.”
 
 ## implementation
 

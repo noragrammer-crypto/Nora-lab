@@ -5,7 +5,7 @@
     <mxCell id="1" parent="0" />
 
     <!-- Title -->
-    <mxCell id="title" value="Solo XP Workflow v2 — /xp スキルマッピング" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
+    <mxCell id="title" value="Solo XP Workflow v2 — /xp Skill Map" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;" vertex="1" parent="1">
       <mxGeometry x="400" y="20" width="900" height="40" as="geometry" />
     </mxCell>
 
@@ -18,15 +18,15 @@
       <mxGeometry x="40" y="60" width="200" height="50" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_plan" value="&lt;b&gt;/xp_plan&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;作業見積もり&#xa;タスク分解&#xa;&#xa;XP: Planning Game" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane_planning">
+    <mxCell id="xp_plan" value="&lt;b&gt;/xp_plan&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Estimate work&#xa;Break down tasks&#xa;&#xa;XP: Planning Game" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane_planning">
       <mxGeometry x="40" y="150" width="200" height="100" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_issue" value="&lt;b&gt;/xp_issue&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;GitHub Issue転写&#xa;サブIssue（タスク）発行&#xa;&#xa;XP: Stories → Tasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane_planning">
+    <mxCell id="xp_issue" value="&lt;b&gt;/xp_issue&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Transfer to GitHub Issue&#xa;Create sub-issues (tasks)&#xa;&#xa;XP: Stories → Tasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=11;" vertex="1" parent="lane_planning">
       <mxGeometry x="40" y="300" width="200" height="110" as="geometry" />
     </mxCell>
 
-    <mxCell id="branch" value="🌿 feature branch 作成&#xa;feature/issue-{N}-{概要}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="lane_planning">
+    <mxCell id="branch" value="🌿 Create feature branch&#xa;feature/issue-{N}-{summary}" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=11;" vertex="1" parent="lane_planning">
       <mxGeometry x="40" y="460" width="200" height="50" as="geometry" />
     </mxCell>
 
@@ -35,15 +35,15 @@
       <mxGeometry x="360" y="80" width="280" height="560" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_e2e" value="&lt;b&gt;/xp_E2Etest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;受け入れテストスイート作成&#xa;（Story レベル）&#xa;&#xa;XP: Customer Tests → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
+    <mxCell id="xp_e2e" value="&lt;b&gt;/xp_E2Etest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Create acceptance test suite&#xa;(Story level)&#xa;&#xa;XP: Customer Tests → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
       <mxGeometry x="40" y="60" width="200" height="110" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_func" value="&lt;b&gt;/xp_FunctionalTest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;モデル層 結合テスト作成&#xa;（複数クラス・モックなし）&#xa;GUI層と切り離し&#xa;&#xa;XP: Integration → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
+    <mxCell id="xp_func" value="&lt;b&gt;/xp_FunctionalTest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Create model-layer integration tests&#xa;(multiple classes; no mocks)&#xa;Separate from the GUI layer&#xa;&#xa;XP: Integration → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
       <mxGeometry x="40" y="210" width="200" height="120" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_unit" value="&lt;b&gt;/xp_UnitTest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;単体テスト作成&#xa;pure / mock-based&#xa;RED確認まで&#xa;&#xa;XP: TDD → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
+    <mxCell id="xp_unit" value="&lt;b&gt;/xp_UnitTest&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Create unit tests&#xa;pure / mock-based&#xa;Confirm RED&#xa;&#xa;XP: TDD → RED" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=11;" vertex="1" parent="lane_testing">
       <mxGeometry x="40" y="370" width="200" height="120" as="geometry" />
     </mxCell>
 
@@ -52,19 +52,19 @@
       <mxGeometry x="680" y="80" width="280" height="560" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_impl" value="&lt;b&gt;/xp_implement&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;タスク実装&#xa;疑念→Issueコメント終了&#xa;&#xa;XP: Coding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
+    <mxCell id="xp_impl" value="&lt;b&gt;/xp_implement&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Implement task&#xa;Questions → end with an Issue comment&#xa;&#xa;XP: Coding" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
       <mxGeometry x="40" y="60" width="200" height="100" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_run_unit" value="&lt;b&gt;/xp_RunAllUnitTests&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Unit テスト全実行&#xa;GREEN確認&#xa;&#xa;XP: TDD Green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
+    <mxCell id="xp_run_unit" value="&lt;b&gt;/xp_RunAllUnitTests&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Run all unit tests&#xa;Confirm GREEN&#xa;&#xa;XP: TDD Green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
       <mxGeometry x="40" y="200" width="200" height="100" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_run_suites" value="&lt;b&gt;/xp_RunTestSuites&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Unit + Functional 全実行&#xa;&#xa;XP: Continuous Integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
+    <mxCell id="xp_run_suites" value="&lt;b&gt;/xp_RunTestSuites&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Run all Unit + Functional tests&#xa;&#xa;XP: Continuous Integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
       <mxGeometry x="40" y="340" width="200" height="90" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_run_e2e" value="&lt;b&gt;/xp_RunE2ETests&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;E2E テスト実行&#xa;Story全体の受け入れ確認&#xa;&#xa;XP: Customer Tests Green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
+    <mxCell id="xp_run_e2e" value="&lt;b&gt;/xp_RunE2ETests&lt;/b&gt;&#xa;━━━━━━━━━━━━&#xa;Run E2E tests&#xa;Confirm acceptance for the whole Story&#xa;&#xa;XP: Customer Tests Green" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="lane_coding">
       <mxGeometry x="40" y="460" width="200" height="60" as="geometry" />
     </mxCell>
 
@@ -73,19 +73,19 @@
       <mxGeometry x="1000" y="80" width="280" height="560" as="geometry" />
     </mxCell>
 
-    <mxCell id="ci_push" value="📤 push トリガー&#xa;━━━━━━━━━━━━&#xa;lint / format チェック&#xa;/xp_RunAllUnitTests 相当&#xa;/xp_RunTestSuites 相当&#xa;&#xa;XP: Continuous Integration&#xa;= ペア(Actions)が番人" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
+    <mxCell id="ci_push" value="📤 Push trigger&#xa;━━━━━━━━━━━━&#xa;Lint / format checks&#xa;/xp_RunAllUnitTests equivalent&#xa;/xp_RunTestSuites equivalent&#xa;&#xa;XP: Continuous Integration&#xa;= Actions as the paired guardian" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
       <mxGeometry x="40" y="60" width="200" height="140" as="geometry" />
     </mxCell>
 
-    <mxCell id="ci_refactor" value="🔧 リファクタリング品質チェック&#xa;━━━━━━━━━━━━&#xa;カバレッジ計測&#xa;複雑度チェック&#xa;&#xa;XP: Refactoring（劣化検知）" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
+    <mxCell id="ci_refactor" value="🔧 Refactoring quality checks&#xa;━━━━━━━━━━━━&#xa;Measure coverage&#xa;Check complexity&#xa;&#xa;XP: Refactoring(detect regressions)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
       <mxGeometry x="40" y="240" width="200" height="110" as="geometry" />
     </mxCell>
 
-    <mxCell id="ci_pr" value="📬 PR トリガー&#xa;━━━━━━━━━━━━&#xa;/xp_RunE2ETests 相当&#xa;カバレッジレポート&#xa;&#xa;XP: Review = Actions承認" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
+    <mxCell id="ci_pr" value="📬 PR trigger&#xa;━━━━━━━━━━━━&#xa;/xp_RunE2ETests equivalent&#xa;Coverage report&#xa;&#xa;XP: Review = Actions approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
       <mxGeometry x="40" y="390" width="200" height="110" as="geometry" />
     </mxCell>
 
-    <mxCell id="ci_merge" value="✅ main マージ&#xa;→ ブランチ削除&#xa;→ Story Issue クローズ&#xa;&#xa;XP: Small Release" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
+    <mxCell id="ci_merge" value="✅ Merge main&#xa;→ Delete branch&#xa;→ Close Story Issue&#xa;&#xa;XP: Small Release" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=11;" vertex="1" parent="lane_ci">
       <mxGeometry x="40" y="490" width="200" height="40" as="geometry" />
     </mxCell>
 
@@ -94,15 +94,15 @@
       <mxGeometry x="1320" y="80" width="280" height="560" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_wl_issue" value="&lt;b&gt;/xp_worklog&lt;/b&gt; &lt;#issue&gt;&#xa;━━━━━━━━━━━━&#xa;Issue単位の作業時間集計&#xa;&#xa;XP: Velocity tracking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
+    <mxCell id="xp_wl_issue" value="&lt;b&gt;/xp_worklog&lt;/b&gt; &lt;#issue&gt;&#xa;━━━━━━━━━━━━&#xa;Aggregate work time per Issue&#xa;&#xa;XP: Velocity tracking" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
       <mxGeometry x="40" y="60" width="200" height="100" as="geometry" />
     </mxCell>
 
-    <mxCell id="xp_wl_iter" value="&lt;b&gt;/xp_worklog&lt;/b&gt; (引数なし)&#xa;━━━━━━━━━━━━&#xa;イテレーション全体集計&#xa;レポート表示&#xa;&#xa;XP: Iteration Review" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
+    <mxCell id="xp_wl_iter" value="&lt;b&gt;/xp_worklog&lt;/b&gt; (no arguments)&#xa;━━━━━━━━━━━━&#xa;Aggregate the entire iteration&#xa;Display report&#xa;&#xa;XP: Iteration Review" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
       <mxGeometry x="40" y="210" width="200" height="110" as="geometry" />
     </mxCell>
 
-    <mxCell id="next_iter" value="🔄 次イテレーションへ&#xa;Velocity元に再見積" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
+    <mxCell id="next_iter" value="🔄 Next iteration&#xa;Re-estimate based on velocity" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="lane_review">
       <mxGeometry x="40" y="370" width="200" height="60" as="geometry" />
     </mxCell>
 
@@ -120,7 +120,7 @@
     </mxCell>
 
     <!-- Planning → Testing -->
-    <mxCell id="e3" value="Story Issue作成" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_issue" target="xp_e2e" parent="1">
+    <mxCell id="e3" value="Create Story Issue" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_issue" target="xp_e2e" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
@@ -133,7 +133,7 @@
     </mxCell>
 
     <!-- Testing → Coding -->
-    <mxCell id="e6" value="RED確認済" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_unit" target="xp_impl" parent="1">
+    <mxCell id="e6" value="RED confirmed" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_unit" target="xp_impl" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
@@ -146,7 +146,7 @@
     </mxCell>
 
     <!-- xp_run_unit → loop back if RED -->
-    <mxCell id="e8b" value="RED→修正" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" source="xp_run_unit" target="xp_impl" parent="1">
+    <mxCell id="e8b" value="RED → fix" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" edge="1" source="xp_run_unit" target="xp_impl" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
           <mxPoint x="650" y="350" />
@@ -165,13 +165,13 @@
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
-    <!-- Coding → E2E (Story完了時) -->
-    <mxCell id="e10b" value="Story完了時" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;dashed=1;" edge="1" source="xp_run_suites" target="xp_run_e2e" parent="1">
+    <!-- Coding → E2E (When the Story is complete) -->
+    <mxCell id="e10b" value="When the Story is complete" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;dashed=1;" edge="1" source="xp_run_suites" target="xp_run_e2e" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
     <!-- E2E → CI PR -->
-    <mxCell id="e11" value="PR作成" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_run_e2e" target="ci_pr" parent="1">
+    <mxCell id="e11" value="Create PR" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="xp_run_e2e" target="ci_pr" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
@@ -181,7 +181,7 @@
     </mxCell>
 
     <!-- CI merge → worklog -->
-    <mxCell id="e13" value="Close後" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="ci_merge" target="xp_wl_issue" parent="1">
+    <mxCell id="e13" value="After closing" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;" edge="1" source="ci_merge" target="xp_wl_issue" parent="1">
       <mxGeometry relative="1" as="geometry" />
     </mxCell>
 
@@ -194,7 +194,7 @@
     </mxCell>
 
     <!-- next_iter → storycard (ループ) -->
-    <mxCell id="e16" value="次イテレーション" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="next_iter" target="storycard" parent="1">
+    <mxCell id="e16" value="Next iteration" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;dashed=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" source="next_iter" target="storycard" parent="1">
       <mxGeometry relative="1" as="geometry">
         <Array as="points">
           <mxPoint x="1460" y="720" />
@@ -204,7 +204,7 @@
     </mxCell>
 
     <!-- 作業時間記録 note -->
-    <mxCell id="wl_note" value="📝 作業時間記録（全フェーズ共通）&#xa;Issue コメントに随時: 作業開始 / 完了 / 中断 / 再開" style="text;html=1;strokeColor=#b85450;fillColor=#ffe6cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="1">
+    <mxCell id="wl_note" value="📝 Work-time tracking (all phases)&#xa;Add to the Issue as needed: start / complete / pause / resume" style="text;html=1;strokeColor=#b85450;fillColor=#ffe6cc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=1;fontSize=11;" vertex="1" parent="1">
       <mxGeometry x="520" y="700" width="600" height="50" as="geometry" />
     </mxCell>
 

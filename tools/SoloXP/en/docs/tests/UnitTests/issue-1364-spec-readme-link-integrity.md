@@ -24,7 +24,7 @@ Verify that all .md links in the spec directory listed in spec/README.md exist (
 
 ## Change history (#2637)
 
-Initially, the absence of novel_generator_run.md was detected and corrected as a dangling link, but novel_generator_run.md itself was correctly moved to `AINovelGenerator/docs/spec/` in #404 (change of management location of NovelGeneratorRun), and should not exist in `SoloXP/docs/spec/`. In this test, we unified the policy of eliminating dangling links by deleting the relevant link from README.md, and deleted the test case that required ``novel_generator_run.md to exist in the spec directory.''
+Initially, the absence of novel_generator_run.md was detected and corrected as a dangling link, but novel_generator_run.md itself was correctly moved to `AINovelGenerator/docs/spec/` in #404 (change of management location of NovelGeneratorRun), and should not exist in `SoloXP/docs/spec/`. In this test, we unified the policy of eliminating dangling links by deleting the relevant link from README.md, and deleted the test case that required “novel_generator_run.md to exist in the spec directory.”
 
 ## Coverage Summary
 

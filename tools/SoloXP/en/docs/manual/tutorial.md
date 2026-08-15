@@ -22,7 +22,7 @@ One small issue with the `[Task]` tag can be completed with one `xp_Director` ex
 
 ## Example: Extracting duplicate date format processing into a common function
 
-`xp_Director` does not bypass Architect and may additionally issue a subtask equivalent to E2E/spec even if the issue is tagged with `[Task]`, if it involves a change in behavior that can be observed from the user/externally (addition/change of API, UI, output content, etc.) (``Observable change check'' in [WORKFLOW.md](../../WORKFLOW.md)). The first one is an example of **internal refactor only** (no change in behavior) that is not caught by this gate.
+`xp_Director` does not bypass Architect and may additionally issue a subtask equivalent to E2E/spec even if the issue is tagged with `[Task]`, if it involves a change in behavior that can be observed from the user/externally (addition/change of API, UI, output content, etc.) (“Observable change check” in [WORKFLOW.md](../../WORKFLOW.md)). The first one is an example of **internal refactor only** (no change in behavior) that is not caught by this gate.
 
 ### 1. Create an issue (you)
 
@@ -54,7 +54,7 @@ Enter the following in Claude Code.
 /xp_Director 101
 ```
 
-This time, since ``only internal refactoring is done, external behavior is not changed'', the observable change check is determined to be ``none'', and as per the `[Task]` tag, Architect is bypassed and the task processing flow is entered as is. During execution, progress comments are piled up on the issue:
+This time, since “only internal refactoring is done, external behavior is not changed”, the observable change check is determined to be “none”, and as per the `[Task]` tag, Architect is bypassed and the task processing flow is entered as is. During execution, progress comments are piled up on the issue:
 
 ```
 ## Observable change check ([Task] Skip judgment)

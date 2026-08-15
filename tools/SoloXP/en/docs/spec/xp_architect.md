@@ -71,7 +71,7 @@ Calls the `code-architect` subagent (Agent tool, `subagent_type: code-architect`
 Call the Agent tool passing the following:
 - `subagent_type`: `code-architect`
 - `prompt`: Including the purpose of the story/task, acceptance conditions, influence scope candidates (under `api/<EpicName>/`, etc.),
-  Specify that ``I would like you to design it as an extension of the existing pattern without introducing a new one.''
+  Specify that “I would like you to design it as an extension of the existing pattern without introducing a new one.”
 - `isolation`: Not specified (no worktree required as it is read-only)
 
 **Mapping output to xp execution plan:**
@@ -302,7 +302,7 @@ Blocking (waiting for depends_on):
 
 ### Principle: Do not destroy the existing
 
-The architect's greatest responsibility is not to ``create something new,'' but to ``not destroy the existing design.'' The proposed design must be an **extension** of patterns that are already out there.
+The architect's greatest responsibility is not to “create something new,” but to “not destroy the existing design.” The proposed design must be an **extension** of patterns that are already out there.
 
 ### Complete tracing before implementation
 

@@ -1,25 +1,26 @@
 #!/bin/bash
-# publish-nora-lab.sh — 公開HEAD基準のsnapshot/diff commitでNora-labへ継続同期する（Issue #2761）
+# publish-nora-lab.sh — Continuously synchronize Nora-lab using a snapshot/diff commit based on the public HEAD (Issue #2761)
 #
-# 背景（Issue #2761）:
-# 継続的なPrivate→Public同期に `git subtree split`/`git subtree push` を使うと、
-# 「Nora-lab/に一度でも触れた全コミット」を祖先グラフに沿って辿るため、HolyAutomater本体側で
-# 無関係な事故（例: 巨大な誤削除→revert）が起きるとその祖先グラフごと公開リポジトリへ運ばれてしまう
-# （2026-08-06、本体の私的履歴が公開リポジトリへ漏洩する事故が実際に発生した）。
+# Background (Issue #2761):
+# Using `git subtree split`/`git subtree push` for ongoing Private-to-Public synchronization
+# follows every commit that ever touched `Nora-lab/` through the ancestor graph. Therefore,
+# an unrelated incident in HolyAutomater (for example, an accidental large deletion followed by a revert)
+# could carry that entire ancestor graph into the public repository.
+# (On 2026-08-06, private history from the main repository was actually leaked to the public repository.)
 #
-# このスクリプトは「祖先グラフを一切参照しない」方式で継続同期する:
-#   1. 公開リポジトリを --depth 1 でclone（この時点でPrivate側の履歴とは完全に無関係）
-#   2. 公開HEADが、private側が最後に取り込んだ地点から進んでいないか確認する（後述）
-#   3. clone直後の作業ツリーを空にし、ローカルのスナップショット（例: Nora-lab/）の
-#      git管理下ファイル（tracked files）のみで丸ごと置き換える
-#   4. 差分があれば1コミットとして積む。コミットの親は「公開HEAD」ただ1つだけであり、
-#      Private側の履歴を祖先に持ち込むことは構造的に不可能
-#   5. 新規ブランチとしてpushする（publicのmainはbranch protectedのため、PRはオーナーが発行・マージする）
+# This script performs ongoing synchronization without ever consulting the ancestor graph:
+#   1. Clone the public repository with --depth 1 (completely unrelated to Private history at this point).
+#   2. Verify that the public HEAD has not advanced since Private last incorporated it (explained below).
+#   3. Empty the newly cloned working tree, then replace it entirely with only the Git-tracked files
+#      from the local snapshot (for example, Nora-lab/).
+#   4. If a diff exists, create one commit. Its sole parent is the public HEAD, so structurally
+#      it cannot introduce Private history as an ancestor.
+#   5. Push it as a new branch (the public main branch is protected; the owner opens and merges the PR).
 #
-# 使い方:
+# Usage:
 #   SoloXP/scripts/publish-nora-lab.sh <snapshot-dir> <remote-url> <base-branch> <publish-branch> <commit-message>
 #
-# 例:
+# Example:
 #   SoloXP/scripts/publish-nora-lab.sh \
 #     "$(git rev-parse --show-toplevel)/Nora-lab" \
 #     https://github.com/noragrammer-crypto/Nora-lab.git \
@@ -27,12 +28,12 @@
 #     sync/nora-lab-20260807 \
 #     "sync: HolyAutomater Nora-lab/ snapshot (2026-08-07)"
 #
-# 環境変数:
-#   NORA_LAB_ALLOW_DIVERGED_PUBLISH=1 — 公開側の未取り込み変更を検知しても中断せず強制的に進める
+# Environment variable:
+#   NORA_LAB_ALLOW_DIVERGED_PUBLISH=1 — Continue without stopping even when unincorporated public changes are detected.
 #
-# 終了コード:
-#   0 = push成功、または差分なしでpushをスキップ（どちらも正常終了）
-#   1 = 引数不足・clone失敗・公開側の未取り込み変更を検知した場合等のエラー
+# Exit codes:
+#   0 = push succeeds, or is skipped because there is no diff (both are normal completion)
+#   1 = error such as missing arguments, clone failure, or detecting unincorporated public changes
 
 set -euo pipefail
 
@@ -48,26 +49,27 @@ PUBLISH_BRANCH="$4"
 COMMIT_MESSAGE="$5"
 
 if [ ! -d "$SNAPSHOT_DIR" ]; then
-  echo "❌ スナップショットディレクトリが見つかりません: $SNAPSHOT_DIR" >&2
+  echo "❌ Snapshot directory not found: $SNAPSHOT_DIR" >&2
   exit 1
 fi
 
-# スナップショットディレクトリはgitリポジトリ配下にあることを要求する。
-# 単純に `cp -r` で物理コピーすると、HolyAutomater本体側の .gitignore（例: `.env`）で
-# 除外されているだけで実体としては存在するファイルまで、独立したclone先では除外ルールの
-# 対象外になり `git add -A` でそのまま公開されてしまう。tracked files（`git ls-files`）のみを
-# コピー対象にすることでこれを防ぐ（PR #2762 Codexレビュー指摘）。
+# Require the snapshot directory to be inside a Git repository.
+# A physical `cp -r` would also copy files that exist locally but are merely excluded by the
+# HolyAutomater .gitignore (for example, `.env`). Those exclusion rules do not apply in the
+# independent clone, so `git add -A` would publish them unchanged. Copying only tracked files
+# (`git ls-files`) prevents this (as noted in the PR #2762 Codex review).
 if ! git -C "$SNAPSHOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "❌ スナップショットディレクトリはgitリポジトリ配下にある必要があります: $SNAPSHOT_DIR" >&2
+  echo "❌ Snapshot directory must be inside a Git repository: $SNAPSHOT_DIR" >&2
   exit 1
 fi
 
 PRIVATE_REPO_ROOT="$(git -C "$SNAPSHOT_DIR" rev-parse --show-toplevel)"
 
-# 直近の `git subtree pull/add --squash` が記録した「private側が最後に取り込んだ公開側コミットSHA」を
-# private側のコミット履歴（`git-subtree-split: <sha>` トレーラー）から取得する。
-# 公開側でこの時点より進んだ変更（オーナーによる直接push・PR等）があるのに気づかず publish すると、
-# その変更を削除・巻き戻す形のPRを作ってしまう（PR #2762 Codexレビュー指摘）。これを検知する基準値として使う。
+# Obtain the public commit SHA that Private last incorporated, recorded by the latest
+# `git subtree pull/add --squash`, from Private's commit history (`git-subtree-split: <sha>` trailer).
+# Publishing without noticing newer public changes (direct owner pushes, PRs, etc.) could create a PR
+# that removes or reverts them. Use this as the reference value for detecting that condition
+# (as noted in the PR #2762 Codex review).
 LAST_KNOWN_PUBLIC_SHA="$(
   git -C "$PRIVATE_REPO_ROOT" log --format='%B' -- "$SNAPSHOT_DIR" 2>/dev/null \
     | grep -m1 -oE 'git-subtree-split: [0-9a-f]{40}' \
@@ -77,9 +79,9 @@ LAST_KNOWN_PUBLIC_SHA="$(
 WORKDIR="$(mktemp -d)"
 trap 'rm -rf "$WORKDIR"' EXIT
 
-echo "🔄 公開リポジトリを --depth 1 でclone中（$BASE_BRANCH）..."
-# --depth 1: これより前のコミットはこのローカルclone上に一切存在しない。
-# Private側の履歴を「知らない」状態を物理的に保証するための最重要ポイント。
+echo "🔄 Cloning the public repository with --depth 1 ($BASE_BRANCH)..."
+# --depth 1: no commits before this one exist in the local clone.
+# This is the key safeguard that physically ensures it has no knowledge of Private history.
 git clone --quiet --depth 1 --branch "$BASE_BRANCH" "$REMOTE_URL" "$WORKDIR/public"
 
 cd "$WORKDIR/public"
@@ -90,21 +92,21 @@ PUBLIC_HEAD_SHA="$(git rev-parse HEAD)"
 
 if [ -n "$LAST_KNOWN_PUBLIC_SHA" ] && [ "$LAST_KNOWN_PUBLIC_SHA" != "$PUBLIC_HEAD_SHA" ]; then
   if [ "${NORA_LAB_ALLOW_DIVERGED_PUBLISH:-}" != "1" ]; then
-    echo "❌ 公開HEAD（$PUBLIC_HEAD_SHA）が、private側が最後に取り込んだ時点（$LAST_KNOWN_PUBLIC_SHA）から進んでいます。" >&2
-    echo "   公開側で直接push・PRされた変更が private側へ pull されていない可能性があります。" >&2
-    echo "   先に 'git subtree pull --prefix=<snapshot-dir> <remote> <branch> --squash' で取り込んでから再実行してください。" >&2
-    echo "   （承知の上で強制的に進める場合は環境変数 NORA_LAB_ALLOW_DIVERGED_PUBLISH=1 を設定してください）" >&2
+    echo "❌ Public HEAD ($PUBLIC_HEAD_SHA) has advanced since Private last incorporated it ($LAST_KNOWN_PUBLIC_SHA)." >&2
+    echo "   Changes pushed directly or through PRs on the public side may not have been pulled into Private." >&2
+    echo "   First incorporate them with 'git subtree pull --prefix=<snapshot-dir> <remote> <branch> --squash', then rerun." >&2
+    echo "   (To force continuation intentionally, set NORA_LAB_ALLOW_DIVERGED_PUBLISH=1.)" >&2
     exit 1
   fi
-  echo "⚠️  公開HEADが最後の取り込み時点から進んでいますが、NORA_LAB_ALLOW_DIVERGED_PUBLISH=1 のため続行します。"
+  echo "⚠️  Public HEAD has advanced since the last incorporation, but continuing because NORA_LAB_ALLOW_DIVERGED_PUBLISH=1."
 fi
 
-# 公開HEADの追跡ファイルを一旦すべて削除してから、スナップショットで置き換える。
-# こうすることで、正本側で削除済みのファイルも公開側から消える（--delete相当）。
+# Remove all tracked files from the public HEAD, then replace them with the snapshot.
+# This also removes from Public any files already deleted in the source of truth (equivalent to --delete).
 git ls-files -z | xargs -0 -r rm -f
 find . -mindepth 1 -type d -not -path './.git*' -empty -delete
 
-# $SNAPSHOT_DIR配下のgit管理下ファイル（tracked files）のみをコピーする（上記の理由によりcp -rは使わない）。
+# Copy only Git-tracked files below $SNAPSHOT_DIR (do not use cp -r for the reason above).
 while IFS= read -r -d '' rel; do
   mkdir -p "$(dirname "$rel")"
   cp "$SNAPSHOT_DIR/$rel" "$rel"
@@ -113,17 +115,17 @@ done < <(git -C "$SNAPSHOT_DIR" ls-files -z)
 git add -A
 
 if git diff --cached --quiet; then
-  echo "✅ 公開HEADとの差分なし。publishをスキップします。"
+  echo "✅ No diff from public HEAD. Skipping publish."
   exit 0
 fi
 
 git commit --quiet -m "$COMMIT_MESSAGE"
 
-# コミットグラフの健全性を出力する（祖先が公開HEAD1件だけであることの目視確認用）
+# Print commit-graph health information for manually confirming the sole ancestor is the public HEAD.
 PARENT_COUNT="$(git log -1 --pretty=%P HEAD | wc -w | tr -d ' ')"
-echo "🔎 新規コミットの親コミット数: $PARENT_COUNT（1であること = Private側履歴を一切含まないことの確認）"
+echo "🔎 Parent commit count of the new commit: $PARENT_COUNT (1 confirms it contains no Private history)"
 
-echo "🔼 $PUBLISH_BRANCH へpush中..."
+echo "🔼 Pushing to $PUBLISH_BRANCH..."
 git push --quiet origin "HEAD:refs/heads/$PUBLISH_BRANCH"
 
-echo "✅ push完了: $PUBLISH_BRANCH（公開リポジトリ側でPRを発行しオーナーがマージする）"
+echo "✅ Push complete: $PUBLISH_BRANCH (open a PR in the public repository for the owner to merge)"

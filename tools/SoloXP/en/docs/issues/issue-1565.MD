@@ -9,7 +9,7 @@ issue: 1565 title: "[Task] xp_Architect: Redefine type determination based on st
 ## overview
 Improvement suggestion B for story #1557.
 
-- In the type classification criteria, specify ``Does it involve a change in behavior that can be observed from the user/externally (= can you write acceptance conditions)'' as the first criterion for Story judgment. Scale (number of tasks) is reduced to a secondary criterion.
+- In the type classification criteria, specify “Does it involve a change in behavior that can be observed from the user/externally (= can you write acceptance conditions)” as the first criterion for Story judgment. Scale (number of tasks) is reduced to a secondary criterion.
 - Even when processing a one-off `[Task]`, it is mandatory to explicitly determine whether E2E testing is necessary or whether specification updates are necessary, and to record the reason for the determination as a comment in the issue. Tasks that involve observable behavioral changes should be accompanied by E2E/spec tasks in the same way as Stories.
 - Edit target: `dotfiles/.claude/skills/xp_Architect/SKILL.md` and `SoloXP/skills/xp_Architect/SKILL.md` (synchronization required)
 

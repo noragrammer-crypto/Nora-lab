@@ -27,7 +27,7 @@ Verify that there is an instruction to record the start of work on the parent Bu
 | # | Given | When | Then |
 |---|---|---|---|
 | 1 | xp_Director SKILL.md exists | Check the "After Architect completion (for Story/Bug)" section | Section exists |
-| 2 | Section exists | Check the work start record instructions | There is a description of ``start work'' |
+| 2 | Section exists | Check the work start record instructions | There is a description of “start work” |
 | 3 | Section exists | [ProjectStatus] Check recording instructions | `[ProjectStatus: InProgress]` is written |
 
 ### Acceptance condition 2: xp_Director - AllGREEN Upon completion, there is an instruction to record work completion to the parent issue (2 cases)
@@ -35,7 +35,7 @@ Verify that there is an instruction to record the start of work on the parent Bu
 | # | Given | When | Then |
 |---|---|---|---|
 | 4 | xp_Director SKILL.md exists | Check AllGREEN check section | Section exists |
-| 5 | A section exists | Check the work completion record instructions | There is a description of ``work completed'' |
+| 5 | A section exists | Check the work completion record instructions | There is a description of “work completed” |
 
 ### Acceptance condition 3: xp_Implementer SKILL.md has [Implementer running] recording instructions (2 items)
 
@@ -58,6 +58,7 @@ Verify that there is an instruction to record the start of work on the parent Bu
 | Subissue | Contents | Status |
 |---|---|---|
 | #1444 | Added reproduction test + corrected implementation | Completed |
+| #2059 | Regression: the AllGREEN section heading changed and acceptance condition 2 turned RED again. Resolved by #2792 (reproduction test) and #2793 (heading correction). | Complete |
 
 ---
 
@@ -67,3 +68,5 @@ Verify that there is an instruction to record the start of work on the parent Bu
 |---|---|---|---|
 | 2026-06-15 | 0 | 9 | Before implementation (RED confirmation) |
 | 2026-06-15 | 9 | 0 | #1444 After implementation (all GREEN) |
+| 2026-08-08 | 7 | 2 | #2059 regression detected: the `AllGREEN Check` heading text had disappeared, so acceptance condition 2 became RED again. |
+| 2026-08-09 | 9 | 0 | After #2793: heading corrected and all cases returned to GREEN. |

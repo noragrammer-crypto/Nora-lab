@@ -10,7 +10,7 @@ issue: 1680 title: "[Task] Add bug reproduction test" state: open labels: [task,
 
 Add a test case that reproduces reported bug #1293. Test first to prove the existence of bugs and set acceptance criteria for fix tasks.
 
-SKILL.md of `xp_RunE2ETests` does not have a branching logic that says ``Determine whether the test runner is Jest or Playwright based on the `test:e2e` script content in `package.json`, and if it is Jest, skip the communication check to Vercel/localhost and execute `npm run test:e2e` as is.'' Therefore, even if you target `SoloXP/tests/e2e/` (Jest-based, no HTTP communication), if you follow the steps in the current SKILL.md, the communication check will fail and execution will be skipped.
+SKILL.md of `xp_RunE2ETests` does not have a branching logic that says “Determine whether the test runner is Jest or Playwright based on the `test:e2e` script content in `package.json`, and if it is Jest, skip the communication check to Vercel/localhost and execute `npm run test:e2e` as is.” Therefore, even if you target `SoloXP/tests/e2e/` (Jest-based, no HTTP communication), if you follow the steps in the current SKILL.md, the communication check will fail and execution will be skipped.
 
 Add the reproduction test to `SoloXP/tests/unit/` as a Jest test, and add the SKILL.md body of `xp_RunE2ETests` (3 places: `.claude/skills/xp_RunE2ETests/SKILL.md`, `SoloXP/skills/xp_RunE2ETests/SKILL.md`, Write to verify that `dotfiles/.claude/skills/xp_RunE2ETests/SKILL.md`) contains a description regarding "test runner automatic determination" (currently it is RED because there is no description).
 

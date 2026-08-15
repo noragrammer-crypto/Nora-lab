@@ -1,6 +1,6 @@
 # Notes on branch/PR merge strategy
 
-A collection of know-how about branch operation and PR merging patterns that SoloXP is based on. If `WORKFLOW.md` is a step-by-step guide for ``what happens,'' this is a memo that explains ``why this is happening'' and ``what to change if you want to do something different from the default.''
+A collection of know-how about branch operation and PR merging patterns that SoloXP is based on. If `WORKFLOW.md` is a step-by-step guide for “what happens,” this is a memo that explains “why this is happening” and “what to change if you want to do something different from the default.”
 
 > **If you are new to Git/GitHub**: This page explains Git terms such as `rebase`, `merge`, `--base`, etc.
 > It is assumed that If you want to get a metaphor for "Why does SoloXP use branches this way in the first place?"
@@ -12,7 +12,7 @@ A collection of know-how about branch operation and PR merging patterns that Sol
 > In that case, customization will be required as described below.
 >
 > In most cases, actual rebase/conflict resolution is done by a coding agent (Claude Code/
-> Codex etc.) will do it automatically. The following is ``Even if you leave it to the agent, what is happening behind the scenes?''
+> Codex etc.) will do it automatically. The following is “Even if you leave it to the agent, what is happening behind the scenes?”
 > knowledge that will be useful when you are stuck.
 
 ## 1. Correspondence between issues and branches
@@ -44,7 +44,7 @@ main
 - Issues with a single `[Task]` tag (cases where Architect is bypassed) do not have a parent branch,
   PR will be directly based on `main` from the beginning (see the example in [Usage tutorial](./tutorial.md))
 
-This PR merge strategy of ``piling up subtask changes on an intermediate branch and finally putting them all together on the default branch'' is the default PR merge strategy for SoloXP.
+This PR merge strategy of “piling up subtask changes on an intermediate branch and finally putting them all together on the default branch” is the default PR merge strategy for SoloXP.
 
 ## 3. Custom is required if you want to merge to other than `main`
 
@@ -59,7 +59,7 @@ Even if you rewrite only the `CLAUDE.md` side, if the skill definition side of `
 
 ## 4. Merge conflicts often occur even in solo operation
 
-It's not like ``there are no conflicts because it was developed by one person.'' The SoloXP operation has a structure that makes it easy for conflicts to occur due to the following reasons:
+It's not like “there are no conflicts because it was developed by one person.” The SoloXP operation has a structure that makes it easy for conflicts to occur due to the following reasons:
 
 - **Interrupting a high-priority task**: An urgent bug report comes while processing a certain sub-task.
   First, merge them directly into `main` → When you return to the original sub-Task later, the sub-Task's working branch and parent branch are outdated.
@@ -68,13 +68,13 @@ It's not like ``there are no conflicts because it was developed by one person.''
 - **Long-term Story**: The longer the period between the creation of the parent branch and the time it becomes AllGREEN, the longer the
   In the meantime, there is a high possibility that the `main` side will be progressing (see 5.)
 
-In most cases, a coding agent will handle `git rebase`/conflict resolution on your behalf, but if you understand ``why a rebase is necessary,'' it will be easier to notice when an agent's proposal is incorrect.
+In most cases, a coding agent will handle `git rebase`/conflict resolution on your behalf, but if you understand “why a rebase is necessary,” it will be easier to notice when an agent's proposal is incorrect.
 
 ## 5. When PR is issued for parent branch → main, main is often more advanced.
 
 The parent branch (`feature/issue-{number}`) is disconnected from `main` only once when Story/Bug is started. From there, until AllGREEN is reached and a PR is issued to `main` (a period in which sub-tasks are processed in order), `main` continues to progress with other tasks (such as merging other issues). Therefore, by the time you PR the parent branch to `main`, the **derived source of the parent branch is likely to be outdated**.
 
-The AllGREEN flow of `xp_Director` itself only executes `gh pr create --base main --head feature/issue-{parent number}` and does not have a step to automatically update/rebase `main` in advance. In other words, this work of ``making the parent branch follow the latest `main`'' is not a step explicitly specified in the skill definition, but is often determined and performed by the coding agent as part of general PR operations (when a conflict is detected).
+The AllGREEN flow of `xp_Director` itself only executes `gh pr create --base main --head feature/issue-{parent number}` and does not have a step to automatically update/rebase `main` in advance. In other words, this work of “making the parent branch follow the latest `main`” is not a step explicitly specified in the skill definition, but is often determined and performed by the coding agent as part of general PR operations (when a conflict is detected).
 
 Specifically, the following measures will be required:
 
@@ -93,9 +93,9 @@ In the Claude Code web version, a branch is automatically generated at the start
 | Environment | How branches are determined |
 |---|---|
 | Local/PC | Explicitly `git checkout -b feature/issue-{number}` (you can choose which branch to cut from each time) |
-| Claude Code Web | An auto-generated branch based on `main` already exists when the session starts. When creating a parent branch for Story/Bug, `xp_Director` uses this automatically generated branch by renaming it as `feature/issue-{number}` (``Skip if it already exists'' = do not run `checkout -b` again like local) |
+| Claude Code Web | An auto-generated branch based on `main` already exists when the session starts. When creating a parent branch for Story/Bug, `xp_Director` uses this automatically generated branch by renaming it as `feature/issue-{number}` (“Skip if it already exists” = do not run `checkout -b` again like local) |
 
-Similarly, in the case of sub-task processing, execute `git rebase origin/feature/issue-{parent number}` on Claude Code Web's session branch (automatically generated based on `main`), make it follow the parent branch, and then work. In other words, keep in mind that Claude Code Web requires one step: ``First, a branch based on `main` is prepared, and from there you switch to the parent branch (rename or rebase).'' If you want to imitate this procedure in a local/PC environment, fetch `feature/issue-{parent number}` from the beginning instead of `main` and branch from there to get the same situation.
+Similarly, in the case of sub-task processing, execute `git rebase origin/feature/issue-{parent number}` on Claude Code Web's session branch (automatically generated based on `main`), make it follow the parent branch, and then work. In other words, keep in mind that Claude Code Web requires one step: “First, a branch based on `main` is prepared, and from there you switch to the parent branch (rename or rebase).” If you want to imitate this procedure in a local/PC environment, fetch `feature/issue-{parent number}` from the beginning instead of `main` and branch from there to get the same situation.
 
 For other precautions specific to Claude Code Web (false detection of `gh auth status`, derivation of preview environment URL, etc.), refer to [Operation know-how in Claude Code Web environment](./claude-code-web.md).
 
@@ -105,7 +105,7 @@ For other precautions specific to Claude Code Web (false detection of `gh auth s
   This is a **convention** based on single trunk-based operation, and is not a constraint enforced by the workflow engine.
 - To use a merge pattern other than `main`, rewrite both CLAUDE.md and xp_Director sides.
   is required
-- Even in solo operation, there are three reasons: ``priority interrupt'', ``prolonged story'', and ``serial processing of sub-tasks''.
+- Even in solo operation, there are three reasons: “priority interrupt”, “prolonged story”, and “serial processing of sub-tasks”.
   Merge conflicts are common. In particular, when PR from parent branch to main, main is often advanced, so there are many cases where a prior merge/rebase is actually required.
 - Claude Code The way branches are initially generated differs between Web and local/PC environments. The web version is
   Includes one step: "Automatically generate based on `main` → Switch to parent branch"

@@ -8,7 +8,7 @@ xp_review_workflow is a skill responsible for reviewing workflows and detecting 
 
 ### `/xp_review_workflow`
 
-Looking back at the XP Skills workflow, identify and report on just one point where you think, ``If it had been written this way, it would have worked better.''
+Looking back at the XP Skills workflow, identify and report on just one point where you think, “If it had been written this way, it would have worked better.”
 
 ---
 

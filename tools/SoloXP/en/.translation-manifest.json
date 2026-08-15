@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "source_directory": "../Ja",
-  "source_revision": "ef778b889ff84f23fa93cbe0f2192c30fb46b5d3",
+  "source_revision": "e1f4e6d187d3b5d61d09120cbd1eabaee080ac32",
   "policy": {
     "source_of_truth": "Ja",
     "translated_files": "Each text file has the same relative path under en.",
@@ -67,7 +67,7 @@
     {
       "source": "../Ja/docs/history/memo/solo_xp_workflow_v2.drawio.txt",
       "target": "docs/history/memo/solo_xp_workflow_v2.drawio.txt",
-      "status": "mirrored"
+      "status": "translated"
     },
     {
       "source": "../Ja/docs/history/memo/xp_skills_全体設計草案_v2.md",
@@ -315,6 +315,56 @@
       "status": "translated"
     },
     {
+      "source": "../Ja/docs/issues/issue-2786.MD",
+      "target": "docs/issues/issue-2786.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2787.MD",
+      "target": "docs/issues/issue-2787.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2792.MD",
+      "target": "docs/issues/issue-2792.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2793.MD",
+      "target": "docs/issues/issue-2793.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2797.MD",
+      "target": "docs/issues/issue-2797.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2798.MD",
+      "target": "docs/issues/issue-2798.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2799.MD",
+      "target": "docs/issues/issue-2799.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2800.MD",
+      "target": "docs/issues/issue-2800.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2808.MD",
+      "target": "docs/issues/issue-2808.MD",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/issues/issue-2809.MD",
+      "target": "docs/issues/issue-2809.MD",
+      "status": "translated"
+    },
+    {
       "source": "../Ja/docs/issues/issue-400.MD",
       "target": "docs/issues/issue-400.MD",
       "status": "translated"
@@ -370,6 +420,11 @@
       "status": "translated"
     },
     {
+      "source": "../Ja/docs/manual/actual-loop.md",
+      "target": "docs/manual/actual-loop.md",
+      "status": "translated"
+    },
+    {
       "source": "../Ja/docs/manual/claude-code-web.md",
       "target": "docs/manual/claude-code-web.md",
       "status": "translated"
@@ -377,6 +432,11 @@
     {
       "source": "../Ja/docs/manual/install.md",
       "target": "docs/manual/install.md",
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/docs/manual/process-issue.md",
+      "target": "docs/manual/process-issue.md",
       "status": "translated"
     },
     {
@@ -587,7 +647,12 @@
     {
       "source": "../Ja/scripts/publish-nora-lab.sh",
       "target": "scripts/publish-nora-lab.sh",
-      "status": "mirrored"
+      "status": "translated"
+    },
+    {
+      "source": "../Ja/skills/ProcessCodexIssue/SKILL.md",
+      "target": "skills/ProcessCodexIssue/SKILL.md",
+      "status": "translated"
     },
     {
       "source": "../Ja/skills/ProcessIssue/SKILL.md",
@@ -722,7 +787,7 @@
     {
       "source": "../Ja/solo_xp_workflow_v3.drawio.txt",
       "target": "solo_xp_workflow_v3.drawio.txt",
-      "status": "mirrored"
+      "status": "translated"
     }
   ]
 }
