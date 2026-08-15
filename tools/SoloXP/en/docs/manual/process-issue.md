@@ -58,13 +58,13 @@ There are three labels that pull an issue out of selection, but **the mechanical
 
 | Label | Meaning | Resumption condition |
 |---|---|---|
-| `backlog` | Deferred. Direction and approach are already decided; it's simply waiting its turn | Resumes once the `backlog` label is removed (the exclusion filter is evaluated *before* the priority-bucket classification, so raising a priority label while `backlog` is still attached does not bring the issue back into selection. If you want to expedite it, remove the label first and, if needed, add a priority label separately) |
+| `backlog` | Deferred even though the work is safe to run and its direction and approach are already decided. Use it when execution should wait for practical capacity or scheduling reasons — most often insufficient token budget — rather than because the work is risky or undecided | Resumes once the `backlog` label is removed (the exclusion filter is evaluated *before* the priority-bucket classification, so raising a priority label while `backlog` is still attached does not bring the issue back into selection. If you want to expedite it, remove the label first and, if needed, add a priority label separately) |
 | `block` | Judgment withheld. Letting it proceed automatically would be risky, or you haven't yet made up your own mind | Not time-based — resumes only once the underlying state itself changes (direction settles, the cause is identified, etc.) |
 | `ignore` | Deliberately ignored. Used, after commenting with the reason, for cases such as not being convinced by an AI's automated review finding — the terminal state for "not doing this" | Doesn't resume until manually revisited |
 
 Concrete cases for using `block`: torn between multiple implementation approaches, a bug with an unknown cause that needs exploratory debugging, or the blast radius is large enough that you don't want it to run unattended without confirmation.
 
-When in doubt, there's exactly one criterion: **"Is it safe to let this start automatically, right now?"** If yes, leave it as `backlog` or unlabeled; if it feels risky, use `block`.
+When in doubt, separate **whether the work is safe to automate** from **whether it should consume execution capacity now**. If it is unsafe or needs judgment, use `block`. If it is safe and should be selected now, leave it unlabeled (or add a priority label). If it is safe but should wait because of capacity or scheduling constraints, use `backlog`.
 
 ### The two faces of environment labels: "excluding" vs. "restricting"
 
