@@ -7,7 +7,7 @@ topics:
   - 自動化
   - cron
   - 個人開発
-published: true
+published: false
 ---
 
 ## チャットしない次の一手
