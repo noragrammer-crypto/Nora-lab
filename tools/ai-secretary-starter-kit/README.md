@@ -2,6 +2,8 @@
 
 A small, portable foundation for a personal AI secretary.
 
+[日本語版はこちら](./Ja/README.md)。
+
 It combines three ideas:
 
 1. **An operational home** — GitHub records decisions and completed work.
