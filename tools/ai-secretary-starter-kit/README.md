@@ -17,8 +17,9 @@ The kit is deliberately not a chatbot, SaaS, or a second brain product. It is a 
 1. Copy the contents of `template/` to the root of a new private repository.
 2. Replace the placeholders in `command-center/profile.md` and `command-center/now.md`.
 3. Ask an AI to read `AGENTS.md`, `command-center/`, and `wiki/index.md`.
-4. Discuss one small problem, then create one GitHub Issue for the agreed action.
-5. Treat the eventual pull request as the completion report.
+4. Open `command-center/setup-checklist.md`. Ask your installed AI which capabilities it actually has, then connect only the services needed now.
+5. Discuss one small problem, then create one GitHub Issue for the agreed action.
+6. Treat the eventual pull request as the completion report.
 
 You do not need to build automation first. The first win is to stop explaining your current goal from zero every session.
 
@@ -27,7 +28,7 @@ You do not need to build automation first. The first win is to stop explaining y
 ```text
 template/
 ├── AGENTS.md              # shared safety and reading rules
-├── command-center/        # current intent and operating agreements
+├── command-center/        # current intent, setup checklist, and operating agreements
 ├── inbox/                 # uncurated inputs: URLs, chat notes, clippings
 ├── wiki/                  # curated long-term knowledge (OKF-inspired)
 └── work/                  # optional local work logs and checklists
@@ -54,6 +55,12 @@ updated: 2026-08-27
 
 See [docs/knowledge-format.md](./docs/knowledge-format.md) for the convention and [template/wiki/index.md](./template/wiki/index.md) for the navigation entry point.
 
+## Initial capabilities, not a connector bundle
+
+A secretary needs practical hands and feet: knowledge and file search, web research, work tracking, and sometimes email, calendar, GitHub, or other services. But those are **capabilities to assess**, not a mandate to connect every account on day one.
+
+The installed AI or harness should inspect its available tools, ask what work actually matters, and guide the minimum safe setup. Email can be skipped if it is not part of the user's work. See [docs/initial-capabilities.md](./docs/initial-capabilities.md).
+
 ## Optional Obsidian integration
 
 This kit works in any text editor. If you use Obsidian with a skills-compatible agent, [kepano/obsidian-skills](https://github.com/kepano/obsidian-skills) can teach the agent Obsidian Markdown, Bases, Canvas, CLI, and clean web-page extraction. Install it as an adapter; do not make your knowledge dependent on it.
@@ -68,6 +75,7 @@ This kit works in any text editor. If you use Obsidian with a skills-compatible 
 ## Further reading
 
 - [Quick start](./docs/quickstart.md)
+- [Initial capabilities](./docs/initial-capabilities.md)
 - [Knowledge format](./docs/knowledge-format.md)
 - [Privacy and approval boundary](./docs/privacy-boundary.md)
 - [Nora's original article (Japanese)](https://note.com/noragrammer/n/n366eaa4e1ce8)

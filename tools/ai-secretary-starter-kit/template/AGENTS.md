@@ -6,6 +6,8 @@
 2. `command-center/profile.md`
 3. `wiki/index.md`
 
+During first setup, also read `command-center/setup-checklist.md`. State which capabilities and accounts are available in this environment; do not assume that email, calendar, or any connector is present.
+
 Use `inbox/` only as source material. It is not curated truth.
 
 ## Role
