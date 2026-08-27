@@ -17,6 +17,12 @@ A public monorepo for software experiments, AI tooling, and articles — mirrore
 
 Detects refactoring hotspots from git history and AST analysis: `(change frequency × complexity) / LOC`. The current MVP runs via GitHub Actions only — local execution isn't supported (shallow clones make change-frequency counts unreliable). See [`tools/CodeCompass/`](./tools/CodeCompass/) for setup and the workflows this repo dogfoods at [`.github/workflows/codecompass.yml`](./.github/workflows/codecompass.yml) and [`.github/workflows/hotspot-alert.yml`](./.github/workflows/hotspot-alert.yml).
 
+### AI Secretary Starter Kit
+
+A portable repository template for building a personal AI secretary: an operational command center, curated Markdown knowledge base, and Issue/PR work history. The template uses open files and keeps Obsidian skills optional.
+
+See [`tools/ai-secretary-starter-kit/`](./tools/ai-secretary-starter-kit/) for the 15-minute quick start.
+
 ### Claude Weekly Limit Meter
 
 A simple web app to track your remaining Claude weekly usage.
