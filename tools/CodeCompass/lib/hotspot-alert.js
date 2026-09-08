@@ -98,23 +98,55 @@ function buildAlertIssueBody({ file, hotspotScore, evidence, prNumber }) {
 }
 
 /**
+ * gh 実行の失敗を「gh自体が使えない」ことを示すエラーとしてラップし直す
+ * （呼び出し元がバリデーションエラー等と区別して fail-open / 終端アクションに倒せるようにする）。
+ *
+ * @param {Error} cause
+ * @returns {Error}
+ */
+function wrapGhUnavailable(cause) {
+  const err = new Error(`gh command failed: ${cause.message}`);
+  err.ghUnavailable = true;
+  err.cause = cause;
+  return err;
+}
+
+/**
+ * バッチ文脈の必須読み取り。代替値がないため gh 失敗時は `ghUnavailable: true`
+ * タグ付きエラーを再送出し、呼び出し元（runHotspotAlert）で終端アクションに倒す。
+ *
  * @param {{branch: string, repo: string}} params
  * @returns {number|null}
  */
 function findLatestMergedPR({ branch, repo }) {
-  const cmd = `gh pr list --repo ${repo} --base ${branch} --state merged --limit 1 --json number`;
-  const out = cp.execSync(cmd, { encoding: 'utf8' });
+  let out;
+  try {
+    out = cp.execFileSync('gh', [
+      'pr', 'list', '--repo', repo, '--base', branch, '--state', 'merged', '--limit', '1', '--json', 'number',
+    ], { encoding: 'utf8' });
+  } catch (err) {
+    throw wrapGhUnavailable(err);
+  }
   const list = JSON.parse(out);
   return list.length > 0 ? list[0].number : null;
 }
 
 /**
+ * バッチ文脈の必須読み取り。代替値がないため gh 失敗時は `ghUnavailable: true`
+ * タグ付きエラーを再送出し、呼び出し元（runHotspotAlert）で終端アクションに倒す。
+ *
  * @param {{prNumber: number, repo: string}} params
  * @returns {string|null}
  */
 function getHotspotComment({ prNumber, repo }) {
-  const cmd = `gh pr view ${prNumber} --repo ${repo} --json comments`;
-  const out = cp.execSync(cmd, { encoding: 'utf8' });
+  let out;
+  try {
+    out = cp.execFileSync('gh', [
+      'pr', 'view', String(prNumber), '--repo', repo, '--json', 'comments',
+    ], { encoding: 'utf8' });
+  } catch (err) {
+    throw wrapGhUnavailable(err);
+  }
   const { comments } = JSON.parse(out);
   if (!comments) return null;
 
@@ -128,39 +160,77 @@ function getHotspotComment({ prNumber, repo }) {
 }
 
 /**
+ * 重複チェック（読み取り）。gh失敗時は「重複不明→作成続行」で fail-open する
+ * （抑制の方が実害が大きいため、例外は投げず false を返す）。
+ *
  * @param {{file: string, repo: string}} params
  * @returns {boolean}
  */
 function issueExistsForFile({ file, repo }) {
-  const cmd = `gh issue list --repo ${repo} --state open --search "codecompass-hotspot-alert:file=${file} in:body" --json number`;
-  const out = cp.execSync(cmd, { encoding: 'utf8' });
+  let out;
+  try {
+    out = cp.execFileSync('gh', [
+      'issue', 'list', '--repo', repo, '--state', 'open',
+      '--search', `codecompass-hotspot-alert:file=${file} in:body`, '--json', 'number',
+    ], { encoding: 'utf8' });
+  } catch (err) {
+    return false;
+  }
   const list = JSON.parse(out);
   return Array.isArray(list) && list.length > 0;
 }
 
 /**
- * `lib/codecompass-to-issues.js` の `createIssues` と同じ execSync パターンに従う。
+ * 引数を配列で渡し、ファイル名等に含まれるシェルメタ文字を展開させない。
+ * 書き込み操作のため、gh失敗時は例外を投げず構造化データを返して呼び出し元に委ねる
+ * （`SocialMediaAgent/lib/report-post-failure.js` と同じ `gh-failed` パターン）。
  *
  * @param {{file: string, hotspotScore: number, evidence: string, repo: string, prNumber: number}} params
+ * @returns {undefined|{action: 'gh-failed', file: string, hotspotScore: number, evidence: string, prNumber: number}}
  */
 function createAlertIssue({ file, hotspotScore, evidence, repo, prNumber }) {
   const title = buildAlertIssueTitle(file, hotspotScore);
   const body = buildAlertIssueBody({ file, hotspotScore, evidence, prNumber });
-  const cmd = `gh issue create --repo ${repo} --title "${title}" --label "enhancement,codecompass-detected" --body "${body.replace(/"/g, '\\"')}"`;
-  cp.execSync(cmd);
+  try {
+    cp.execFileSync('gh', [
+      'issue', 'create', '--repo', repo, '--title', title,
+      '--label', 'enhancement,codecompass-detected', '--body', body,
+    ]);
+  } catch (err) {
+    return { action: 'gh-failed', file, hotspotScore, evidence, prNumber };
+  }
+  return undefined;
 }
 
 /**
  * @param {{branch?: string, threshold?: number, repo: string, dryRun?: boolean}} params
- * @returns {{action: string, file: string|null, hotspotScore: number|null}}
+ * @returns {{action: string, file: string|null, hotspotScore: number|null}} action は
+ *   'created' | 'skipped-no-data' | 'skipped-below-threshold' | 'skipped-duplicate' |
+ *   'skipped-gh-unavailable'（#3220: 必須読み取りでgh失敗） | 'gh-failed'（#3220: 起票失敗） のいずれか
  */
 function runHotspotAlert({ branch = 'main', threshold = 1, repo, dryRun = false }) {
-  const prNumber = findLatestMergedPR({ branch, repo });
+  let prNumber;
+  try {
+    prNumber = findLatestMergedPR({ branch, repo });
+  } catch (err) {
+    if (err.ghUnavailable) {
+      return { action: 'skipped-gh-unavailable', file: null, hotspotScore: null };
+    }
+    throw err;
+  }
   if (prNumber === null) {
     return { action: 'skipped-no-data', file: null, hotspotScore: null };
   }
 
-  const commentBody = getHotspotComment({ prNumber, repo });
+  let commentBody;
+  try {
+    commentBody = getHotspotComment({ prNumber, repo });
+  } catch (err) {
+    if (err.ghUnavailable) {
+      return { action: 'skipped-gh-unavailable', file: null, hotspotScore: null };
+    }
+    throw err;
+  }
   if (!commentBody) {
     return { action: 'skipped-no-data', file: null, hotspotScore: null };
   }
@@ -181,7 +251,10 @@ function runHotspotAlert({ branch = 'main', threshold = 1, repo, dryRun = false 
   }
 
   if (!dryRun) {
-    createAlertIssue({ file: top.file, hotspotScore: top.hotspotScore, evidence, repo, prNumber });
+    const createResult = createAlertIssue({ file: top.file, hotspotScore: top.hotspotScore, evidence, repo, prNumber });
+    if (createResult && createResult.action === 'gh-failed') {
+      return createResult;
+    }
   }
 
   return { action: 'created', file: top.file, hotspotScore: top.hotspotScore };
