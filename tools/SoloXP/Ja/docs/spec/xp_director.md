@@ -52,7 +52,7 @@ xp_Director は Solo XP ワークフローの司令塔スキル。
 | 種別 | 識別条件 | 処理 |
 |---|---|---|
 | `e2e_test_creation` | 「E2Eテストスイート作成」または task_type: e2e_test_creation | xp_E2Etest <親ストーリー番号> |
-| `spec_update` | 「機能仕様書更新」または task_type: spec_update | xp_doc_spec <epic> <親ストーリー番号> |
+| `spec_update` | 「機能仕様書更新」または task_type: spec_update | xp_issue2md <task_issue> → xp_doc_spec <epic> <親ストーリー番号> |
 | `bug_reproduction_test` | 「バグ再現テスト追加」または task_type: bug_reproduction_test | xp_Tester <task_issue> |
 | 通常実装タスク | 上記以外 | xp_Tester + xp_Implementer + xp_Auditor + xp_Documenter |
 
@@ -71,19 +71,30 @@ AllGREEN チェックは**今回の `/xp_Director` ランでは実行しない**
 次回の `/ProcessIssue` 実行時、親 Story/Bug イシューを評価する段階
 （ProcessIssue 2-2-C「Architect済みStoryチェック」）で検知される：
 
-1. 全サブイシューのコメントに `[Auditor GREEN]` があれば **AllGREEN**
+1. 全サブイシューの完了マーカーが揃えば **AllGREEN**（通常タスクは `[Auditor GREEN]`、`spec_update` タスクは構造上 `[Auditor GREEN]` を出力せず `[Auditor doc OK]` を完了マーカーとする）
 2. AllGREEN の場合、ProcessIssue が `xp_Director <親イシュー番号>` を**別ランとして**呼び出し、以下を実行する：
-   - `xp_Auditor test <epic> <親ストーリー番号>` に委譲する（Story-level 品質ゲート）
-   - xp_Auditor が受け入れテスト（E2E テスト）・xp_Reviewer 呼び出しを実行する
+   - `xp_Auditor test <epic> <親ストーリー番号>` に委譲する（Story-level 品質ゲート、E2E受け入れテスト）
+   - Story-level GREEN 確認後、xp_Reviewer 呼び出しを実行する
+   - xp_Reviewer 完了後、`xp_SecurityReviewer <epic> <親ストーリー番号>` を呼ぶ（セキュリティレビュー。組み込みスキル `security-review` を呼び出し、高リスク指摘があれば改善勧告イシューを自動起票する。詳細は `xp_securityreviewer.md` 参照）
+   - xp_SecurityReviewer 完了後、`xp_Auditor doc <epic> <親ストーリー番号>` を呼ぶ（ドキュメントチェック）
+   - `xp_RunE2ETests` で E2E テストスイートを確認する
    - **spec_update タスクの完了確認（AllGREEN前提条件）：**
      - サブイシュー一覧から `task_type: spec_update` または「機能仕様書更新」タイトルのタスクを特定する
-     - 該当タスクが存在し `[Auditor GREEN]` がない場合：AllGREEN 不成立とみなし PR を発行せず停止する。親イシューに以下を記録する：
+     - spec_update タスクは `xp_issue2md` → `xp_doc_spec` → `xp_Auditor doc` のみを通過し、完了マーカーは `[Auditor doc OK]`（`[Auditor GREEN]` は構造上出力されない）
+     - 該当タスクが存在し、コメントに `[Auditor doc OK]` がない場合：AllGREEN 不成立とみなし PR を発行せず停止する。親イシューに以下を記録する：
        ```
        ⚠️ spec_update タスク (#<spec_update_issue番号>) が未完了のため AllGREEN 判定を見送ります。
        /xp_Director <spec_update_issue番号> で先に処理してください。
        ```
-     - 該当タスクが存在しない、または `[Auditor GREEN]` 済みの場合のみ次へ進む
-   - 受け入れテスト GREEN かつ spec_update 完了済みの場合：親ブランチ（feature/issue-{番号}）→ main の PR を発行し、ストーリーイシューをクローズする。発行後に `[親ブランチ PR 発行済み]` コメントを記録する
+     - 該当タスクが存在しない、または `[Auditor doc OK]` 済みの場合のみ次へ進む
+   - 全サブタスクPRのマージ確認（完了済みサブイシューに対応する `merged` PR が実在するか個別確認）
+   - **Issue Markdown finalize（AllGREEN成立可否には影響しない付随的な同期処理・#2971/#3485）：**
+     `xp_issueArchiveFinalize <EpicName>` を呼ぶ。対象Epic配下の `docs/issues/issue-*.MD` のうち
+     front matter が `state: open` のままGitHub上ではclosed済みのものを最新版へ差し替える。
+     xp_Director自身はファイルを書き換えず呼び出しのみ行う（コード・ドキュメントを書き換えない原則を維持）。
+     走査件数・finalize件数はAllGREEN判定・`depends_on`解消・`[Auditor GREEN]`判定のSSOTには使用しない。
+     呼び出し失敗時もPR発行を止めない（次回`daily-tasks`実行〈#3486〉のEpic横断finalizeで巻き取る）
+   - 受け入れテスト GREEN・xp_Reviewer 完了・xp_SecurityReviewer 完了・spec_update 完了済み・全サブタスクPRマージ済みの場合：親ブランチ（feature/issue-{番号}）→ main の PR を発行し、ストーリーイシューをクローズする。発行後に `[親ブランチ PR 発行済み]` コメントを記録する。PR本文の `## AllGREEN チェック結果` にはIssue Markdown finalizeの結果も参考情報として記載する
    - 受け入れテスト失敗時：失敗内容で新サブイシューを起票しストーリーは継続する
 3. 未完了サブイシューがある場合 → そのまま停止
 
@@ -144,6 +155,22 @@ JST明記のない過去コメントは後方互換のため UTCとして解釈�
 
 ---
 
+## GitHub アクセス方法
+
+| 環境 | アクセス方法 |
+|---|---|
+| Claude Code Web | MCP経由（`gh` CLI はアウトバウンドプロキシの制約で使えない） |
+| claude.ai / その他（ローカル・Codespaces等） | `gh` コマンド優先。失敗時（未インストール・認証エラー・`HTTP 403`等）はMCPにフォールバックする |
+
+2026-08-28以前は上記マッピングが逆に記載されていた（#3214で修正）。`gh` 優先→失敗時MCPフォールバック→
+フィールド正規化のパターンは `xp_issue2md`（#3204）で確立済み。本スキル内では以下の主要コマンドに適用する：
+
+| `gh` コマンド | 用途 | MCP フォールバック |
+|---|---|---|
+| `gh pr list --search "#<番号>" --base <branch> --state merged` | depends_on解消チェック・全サブタスクPRマージ確認 | `mcp__github__search_pull_requests` |
+| `gh issue close <task_issue>` | タスクイシューの明示クローズ | `mcp__github__issue_write`（method: update, state: closed） |
+| `gh pr create --base main` / `--base feature/issue-{番号}` | PR発行 | `mcp__github__create_pull_request` |
+
 ## 注意事項
 
 - コードファイルへの書き込みは行わない
@@ -157,3 +184,8 @@ JST明記のない過去コメントは後方互換のため UTCとして解釈�
 |---|---|---|---|
 | 2026-06-21 | 1.1.0 | `[Task]` スキップ前の観測可能変更チェック（軽量ゲート）を追加。AllGREEN前提条件に spec_update タスクの完了確認ゲートを追加 | #1557, #1566, #1567 |
 | 2026-07-15 | 1.2.0 | 作業時間コメントをJST明示に統一し、JST明記のない過去コメントをUTCとして扱う後方互換ルールを追加 | #2080 |
+| 2026-08-20 | 1.3.0 | AllGREENフローに xp_SecurityReviewer 呼び出し（xp_Reviewer直後・main PR発行前）を追加 | #1688, #3027 |
+| 2026-08-20 | 1.3.1 | spec_updateタスクの完了マーカーの誤記（`[Auditor GREEN]` → 正しくは `[Auditor doc OK]`）を修正し、xp_Auditor doc・xp_RunE2ETests・全サブタスクPRマージ確認ステップの欠落を補完 | #1688, #3029 |
+| 2026-08-21 | 1.4.0 | spec_update タスクフローに `xp_issue2md <task_issue>`（`xp_doc_spec` の前）を追加。issue2mdログ欠落による `xp_Auditor doc` NG を解消 | #1733 |
+| 2026-08-29 | 1.5.0 | 「## GitHub アクセス方法」の環境マッピング逆転バグを修正（Claude Code Web ↔ その他が逆だった）。gh優先→MCPフォールバックパターンを主要コマンド（PRマージ確認・issue close・PR発行）に追記 | #3205, #3214 |
+| 2026-09-03 | 1.6.0 | AllGREENフローに `xp_issueArchiveFinalize` 呼び出し（全サブタスクPRマージ確認の直後・main PR発行判断の直前）を追加。AllGREEN成立可否には影響しない付随的な同期処理として位置付け、PR本文の `## AllGREEN チェック結果` に参考情報として記載する | #2971, #3485 |

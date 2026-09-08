@@ -1,7 +1,7 @@
 ---
 issue: 276
 title: "[Task] xp_Director SKILL.md にAllGREEN→E2Eテスト→クローズフローを追記する"
-state: open
+state: closed
 labels: [task, epic/SoloXP]
 author: noragrammer-crypto
 created_at: 2026-03-18T10:54:59Z
@@ -114,5 +114,46 @@ dotfiles版・SoloXP版の両 SKILL.md に AllGREEN→xp_RunE2ETests→クロー
 ### noragrammer-crypto — 2026-03-18T11:23:10Z
 
 [Documenter実行中]
+
+---
+
+### noragrammer-crypto — 2026-03-18T11:25:00Z
+
+[Documenter完了]
+
+## ドキュメント生成完了
+
+生成・更新したファイル:
+- `SoloXP/docs/issues/issue-276.MD`: イシューログ保存
+- `SoloXP/docs/spec/xp_director.md`: E2E実行不可/スキップ時の挙動を追記（コードが正）
+- `SoloXP/docs/tests/E2ETests/issue-274-story-close-on-allgreen.md`: E2Eテストドキュメント新規作成
+- `SoloXP/skills/xp_Director/SKILL.md`: リポジトリ内スキル定義（コミット済み）
+- `dotfiles/.claude/skills/xp_Director/SKILL.md`: dotfiles同期（コミット済み）
+
+---
+
+### noragrammer-crypto — 2026-03-18T11:25:08Z
+
+[Auditor ドキュメントチェック中]
+
+---
+
+### noragrammer-crypto — 2026-03-18T11:25:55Z
+
+[PR発行済み #278]
+
+### ドキュメントチェック結果
+- spec/README.md: OK — xp_director.md がインデックスに記載済み
+- spec/xp_director.md: OK — AllGREEN→E2E→クローズフロー（E2E実行不可ケース含む）更新済み
+- docs/tests/E2ETests/issue-274-story-close-on-allgreen.md: OK — 10件のテストケースドキュメント作成済み
+- docs/issues/issue-276.MD: OK — イシューログ保存済み
+
+PR #278 に全変更を含めて発行済み（Issue #275 と同ブランチ）。
+
+---
+
+### noragrammer-crypto — 2026-03-18T11:34:46Z
+
+PR #278 マージ済み・[Auditor GREEN] 確認済みのためクローズ。
 
 ---

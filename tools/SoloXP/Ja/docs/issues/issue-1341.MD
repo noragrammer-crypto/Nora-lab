@@ -1,7 +1,7 @@
 ---
 issue: 1341
 title: "[Task] SKILL.md内容アサート型テストの方針見直し（脆弱テストの構造的削減）"
-state: open
+state: closed
 labels: [task, epic/SoloXP]
 author: noragrammer-crypto
 created_at: 2026-06-13T00:54:50Z
@@ -160,3 +160,34 @@ PASS: 126件 / テストコマンド: `npm run test:unit && npm run test:functio
 
 ---
 
+### noragrammer-crypto — 2026-06-21T18:12:24Z
+
+[Auditor ドキュメントチェック中]
+
+### ドキュメントチェック結果
+- spec/README.md: OK（tdd_principles.md は既存索引済み、本タスクでの新規ファイル追加なし）
+- spec/tdd_principles.md: OK（原則7を追加済み、既存原則との整合性も確認）
+- reference/: OK（対象外 — クラス・関数の変更なし）
+- issue2mdログ: OK（`SoloXP/docs/issues/issue-1341.MD` 生成済み、コメント7件で一致を確認・再生成済み）
+
+参考（本タスクの変更とは無関係の既存ギャップ）:
+- README.md がリンクする `novel_generator_run.md` 未存在 → 既知の #1364 で追跡中
+- README.md がリンクする `../WORKFLOW.md` / `../ARCHITECTURE.md` 未存在 → 本タスクのスコープ外のため新規イシュー化はせず記録のみ
+
+[Auditor doc OK]
+xp_Director がPRを発行します。
+
+---
+
+### noragrammer-crypto — 2026-06-21T18:13:05Z
+
+[PR発行済み #1591]
+
+---
+
+### noragrammer-crypto — 2026-06-21T18:13:05Z
+
+[ProjectStatus: Done]
+作業完了 2026-06-21 18:18 / 所要時間: 14分
+
+---

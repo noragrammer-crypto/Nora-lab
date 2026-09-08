@@ -1,7 +1,7 @@
 ---
 issue: 1360
 title: "[Task] issue-904 テスト正規表現をセクション番号非依存に修正する"
-state: open
+state: closed
 labels: [task, epic/SoloXP]
 author: noragrammer-crypto
 created_at: 2026-06-13T15:50:09Z
@@ -19,6 +19,8 @@ epic: SoloXP
 ## 変更内容
 
 `SoloXP/__tests__/issue-904-auditor-bug-template-parent-branch.unit.test.js` の line 33-36:
+
+
 
 ## 完了条件
 
@@ -67,7 +69,7 @@ task_type: refactoring
 結果: **FAIL 3件 / PASS 2件**（RED 確認）
 
 命題チェック:
-- [ ] `「別タスクスコープのバグ発見時」セクションが存在する` → FAIL（`bugSectionContent` が空: 正規表現 `/###\s+5\.` がセクション6に一致しない）
+- [ ] `「別タスクスコープのバグ発見時」セクションが存在する` → FAIL（`bugSectionContent` が空: 正規表現 `/###\s+5\./` がセクション6に一致しない）
 - [ ] `gh issue create テンプレートに ## 親ストーリー セクションが含まれる` → FAIL（セクション未取得）
 - [ ] `gh issue create テンプレートに ## 親ブランチ セクションが含まれる` → FAIL（セクション未取得）
 - [x] `Story-level Auditor フェーズのセクションが存在する` → PASS（`### 3.` は変更なし）
@@ -91,7 +93,7 @@ task_type: refactoring
 ## 実装完了
 
 変更ファイル:
-- `SoloXP/__tests__/issue-904-auditor-bug-template-parent-branch.unit.test.js`: line 33 正規表現 `/###\s+5\.` → `/###\s+\d+\.` に変更（セクション番号非依存化）
+- `SoloXP/__tests__/issue-904-auditor-bug-template-parent-branch.unit.test.js`: line 33 正規表現 `/###\s+5\./` → `/###\s+\d+\./` に変更（セクション番号非依存化）
 
 テスト結果:
 - 単体テスト: **PASS 5件 / FAIL 0件**（RED → GREEN 確認）
@@ -120,3 +122,45 @@ PASS: 88件（unit） + 20件（functional） / テストコマンド: `npx jest
 ### noragrammer-crypto — 2026-06-13T17:13:47Z
 
 [Documenter実行中]
+
+---
+
+### noragrammer-crypto — 2026-06-13T17:16:42Z
+
+[Documenter完了]
+- `SoloXP/docs/issues/issue-1360.MD` 新規作成
+- `SoloXP/docs/tests/UnitTests/issue-904-auditor-bug-template-parent-branch.md` 新規作成
+
+[Auditor ドキュメントチェック中]
+
+---
+
+### noragrammer-crypto — 2026-06-13T17:17:16Z
+
+### ドキュメントチェック結果
+
+- `SoloXP/docs/issues/issue-1360.MD`: OK（内容充足）
+- `SoloXP/docs/tests/UnitTests/issue-904-auditor-bug-template-parent-branch.md`: OK（5テストケース全件記載）
+- spec/: 今回変更なし（テスト堅牢性改善のみのため）
+
+⚠️ 既存問題（本タスクスコープ外、別途対応推奨）:
+- `spec/README.md` に `novel_generator_run.md` が索引されているがファイルが存在しない
+- `spec/xp_architect.md` が存在するが README 未索引
+
+[Auditor doc OK]
+xp_Director が PR を発行します。
+
+---
+
+### noragrammer-crypto — 2026-06-13T17:19:14Z
+
+[PR発行済み #1361]
+[ProjectStatus: Done]
+
+---
+
+### noragrammer-crypto — 2026-06-13T17:19:18Z
+
+作業完了 2026-06-13 17:20 / 所要時間: 80分
+
+---

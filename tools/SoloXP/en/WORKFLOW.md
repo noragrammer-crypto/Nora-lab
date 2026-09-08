@@ -4,28 +4,28 @@
 > Background explanation of branch naming, base branch, why merge conflicts are likely to occur, etc.
 > See [Notes on branch/PR merge strategy](./docs/manual/branch-strategy.md).
 
-> **Assumptions**: The following workflow includes branch operation, PR issuance pre-approval, and
+> **Assumptions**: The following workflow requires branch operation, PR issuance pre-approval, and
 > It is assumed that TDD principles, work time recording rules, etc. are defined. If you don't have one yet,
 > Copy [`CLAUDE.md.template`](./CLAUDE.md.template) to your `CLAUDE.md` and edit it.
 
 ## Basic flow
 
 ```
-Issue creation (user)
+Issue 作成（ユーザー）
     ↓
-/xp_Director <issue_number> Start
+/xp_Director <issue_number> 起動
     ↓
-xp_Architect: Subissue issue
+xp_Architect: サブイシュー発行
     ↓
-xp_Director: Process each task one by one
+xp_Director: タスク1件ずつ順番に処理
   └─ xp_Tester → xp_Implementer → xp_Auditor test → xp_Documenter → xp_Auditor doc
     ↓
-[Auditor GREEN] → Completion report to parent issue
+[Auditor GREEN] → 親イシューへ完了報告
     ↓
-All sub-issues AllGREEN → xp_RunE2ETests (acceptance test)
+全サブイシュー AllGREEN → xp_RunE2ETests（受け入れテスト）
     ↓
-✅ Pass → Parent story PR issue/Close
-❌ Failure → Create new sub-issue and continue with failure details
+✅ 通過 → 親ストーリーPR発行・Close
+❌ 失敗 → 失敗内容で新サブイシュー起票・継続
 ```
 
 ---
@@ -35,10 +35,10 @@ All sub-issues AllGREEN → xp_RunE2ETests (acceptance test)
 ### 1. Issue creation (user)
 
 ```bash
-# Using any method such as the web version of Claude Code, Termux, GitHub app, etc.
+# Web版Claude Code、Termux、GitHub アプリなど任意の方法で
 gh issue create \
-  --title "[Story] Function name" \
-  --body "## Background\n...\n\n## Acceptance Conditions\n- [ ] ..."
+  --title "[Story] 機能名" \
+  --body "## 背景\n...\n\n## 受け入れ条件\n- [ ] ..."
 ```
 
 ### 2. Start xp_Director
@@ -55,39 +55,40 @@ Or auto-select unprocessed issues without arguments:
 
 ### 3. Task decomposition using xp_Architect
 
-`[Story]`, `[Bug]`, untagged → xp_Architect publishes sub-issue. `[Task]` Tagged → Skip Architect and go straight to the execution flow.
+`[Story]`, `[Bug]`, untagged → xp_Architect publishes sub-issue.
+`[Task]` Tagged → Skip Architect and go straight to the execution flow.
 
 Architect:
 - Categorize issue types into Story / Task / Bug
-- Publish tasks as sub-issues with dependencies
+- Publish the task as a sub-issue with dependencies (if the total number of tasks including required accompanying tasks is only one, do not create a sub-issue/parent branch, and treat the parent issue as the root task. For details, see `xp_Architect/SKILL.md` Step 4-A)
 - Record the execution plan as an Architect analysis result comment
 
 ### 4. Task processing (1 task 1 PR rule)
 
-**Only one task is processed in one xp_Director execution.**
+**Only one task is processed in one xp_Director execution. **
 
 #### Task type and processing method
 
 | Task type | Identification method | Processing skill |
 |---|---|---|
 | `e2e_test_creation` | "E2E test suite creation" or task_type: e2e_test_creation | xp_E2Etest <parent story number> |
-| `spec_update` | "Functional specification update" or task_type: spec_update | xp_doc_spec <epic> <parent story number> |
+| `spec_update` | "Functional specification update" or task_type: spec_update | xp_issue2md <task_issue> → xp_doc_spec <epic> <parent story number> |
 | `bug_reproduction_test` | "Add bug reproduction test" or task_type: bug_reproduction_test | xp_Tester <task_issue> |
 | Normal implementation task | Other than above | xp_Tester → xp_Implementer → xp_Auditor → xp_Documenter |
 
 #### Typical implementation task steps
 
 ```
-[Tester running] → Test suite creation/execution
-[Tester completed]
-[Implementer running] → Implementation to make the test green
-[Implementer completed]
-[Auditor test running] → Test execution/result analysis
-[Auditor GREEN] or [Auditor RED]
-[Documenter running] → Generate all types of documents
-[Documenter completed]
-[Checking Auditor document] → Check spec/reference
-[PR issued #xx]
+[Tester実行中]    → テストスイート作成・実行
+[Tester完了]
+[Implementer実行中] → テストをグリーンにする実装
+[Implementer完了]
+[Auditor テスト実行中] → テスト実行・結果分析
+[Auditor GREEN] または [Auditor RED]
+[Documenter実行中]   → 全種ドキュメント生成
+[Documenter完了]
+[Auditor ドキュメントチェック中] → spec/reference 確認
+[PR発行済み #xx]
 ```
 
 ### 5. Sub-issue completion report
@@ -95,33 +96,49 @@ Architect:
 When a task issue becomes `[Auditor GREEN]`, xp_Auditor reports to the parent story issue:
 
 ```
-Sub-issue #42 completed. Remaining: #43, #45
+サブイシュー #42 完了。残り: #43, #45
 ```
 
 When all sub-issues are completed:
 
 ```
-Sub-issue #42 completed. Remaining: None (all tasks completed)
+サブイシュー #42 完了。残り: なし（全タスク完了）
 ```
 
 ### 6. AllGREEN check → acceptance test
 
-Immediately after issuing a PR, xp_Director checks `[Auditor GREEN]` for all subissues:
+**Important (Execution Timing)**: As per the steps of the normal implementation task in Section 4, `xp_Director` is
+After issuing a task PR, be sure to **pause** (1 task 1 PR rule, see `xp_Director/SKILL.md` step 3 for details).
+AllGREEN checks are not performed within the run. The next time `/ProcessIssue` is executed, the parent Story/Bug issue will be
+The completion of all sub-issues is detected at the evaluation stage, and from there `xp_Director <親イシュー番号>` is **as a separate run**
+When called, performs the following AllGREEN check.
 
-- **For AllGREEN** → Run acceptance tests with `xp_RunE2ETests`
-  - ✅ Pass → Publish PR for parent story issue and Close
-  - ❌ Failure → Create a new sub-issue with failure details, continue the parent issue
-- **If there are unfinished sub-issues** → Stop immediately (the next task will start the next time you call `/xp_Director`)
+`xp_Director` checks completion markers for all subissues (normal tasks are `[Auditor GREEN]`,
+`spec_update` Task <`task_type: spec_update` or "Functional specification update"> is `[Auditor doc OK]`
+——`spec_update` does not output `[Auditor GREEN]` due to its structure, so it is determined using these two types of completion markers):
+
+- For **AllGREEN** → Parent branch → Pass through **all** the required gates below before issuing the PR for main (see `xp_Director/SKILL.md` step 3-e for details):
+  1. Perform Story-level acceptance testing (E2E) on `xp_Auditor test <epic> <story>`
+     - ✅ GREEN → Proceed to the next gate
+     - ❌ RED → Raise a new sub-issue with the details of failure, continue the parent issue (no PR will be issued)
+  2. After confirming Story-level GREEN, conduct a code review by `xp_Reviewer <epic> <story>` (If a high risk is identified, an issue with improvement recommendations will be automatically raised)
+  3. After completing xp_Reviewer, conduct a security review by `xp_SecurityReviewer <epic> <story>` (call the built-in skill `security-review` and automatically raise an improvement recommendation issue if a high risk is pointed out)
+  4. Perform document check with `xp_Auditor doc <epic> <story>`
+  5. Confirm the E2E test suite with `xp_RunE2ETests` (In addition to the Story-level acceptance test in step 1, this is a reference information E2E suite confirmation gate executed by xp_Director itself. Since `xp_RunE2ETests` itself does not have an ownership determination, raw FAIL matches the RED of ``Owned by another story'' whose ownership has already been determined in step 1. If a new FAIL is detected that does not match the RED list in step 1, it will not be established and the process will start again from `xp_Auditor test` in step 1).
+  6. `spec_update` task completion gate: If the sub-issue has a `task_type: spec_update` (or "Functional Specification Update") task, check if `[Auditor doc OK]` is recorded. If incomplete, stop without issuing PR
+  7. Merge confirmation gate for all subtask PRs: Check individually whether a PR in the `merged` state corresponding to each completed sub-issue exists (If the PR is not merged even if there are `[Auditor GREEN]`/`[Auditor doc OK]`, AllGREEN will not hold)8. Issue Markdown finalize (not a gate, but ancillary synchronization process): Call `xp_issueArchiveFinalize <EpicName>` and replace the closed Issue Markdown with the latest version as `state: open` under the target Epic. The result is not used to determine whether AllGREEN is established (non-purpose of #2971). If there is one or more updates, commit/push on the parent branch before proceeding to the next step.
+  - Pass all gates 1 to 7 above (Step 8 is for reference information and is not included in the passing conditions) → Publish a PR for the parent story issue and close (Summary the results of each gate + Issue Markdown finalize in the `## AllGREEN チェック結果` section in the PR body. For the template, see `xp_Director/SKILL.md` Step 3-e-9. #1690, #3485)
+- **If there are unfinished sub-issues** → Stop immediately (the next task will start the next time `/xp_Director` is called)
 
 ### 7. Human confirmation/merge (user)
 
 ```bash
-# Confirm PR
-gh pr view <number>
-gh pr diff <number>
+# PR 確認
+gh pr view <番号>
+gh pr diff <番号>
 
-# merge
-gh pr merge <number> --squash
+# マージ
+gh pr merge <番号> --squash
 ```
 
 ---
@@ -129,8 +146,8 @@ gh pr merge <number> --squash
 ## Resolving depends_on (dependency)
 
 - Don't check GitHub's closed state
-- **Unblocked if there is `[Auditor GREEN]` in the dependent sub-issue comment**
-- Unblocked subissues will be executed on the next `/xp_Director` call
+- **Unblocked if `[Auditor GREEN]` is found in the dependent sub-issue comment**
+- Unblocked subissues will be eligible for execution on the next `/xp_Director` call
 
 ---
 
@@ -140,21 +157,22 @@ Record work time with issue comments (device independent, stays on GitHub timeli
 
 **At start:**
 ```
-Start of work YYYY-MM-DD HH:MM
+作業開始 YYYY-MM-DD HH:MM
 ```
 
 **When completed:**
 ```
-Work completed YYYY-MM-DD HH:MM / Required time: XX minutes
+作業完了 YYYY-MM-DD HH:MM / 所要時間: XX分
 ```
 
-Aggregation is done in `/xp_worklog`.
+Aggregation is done using `/xp_worklog`.
 
 ---
 
 ## Retry control during RED
 
-RED of the same task scope is returned by xp_Director to xp_Implementer (up to 3 times). If it exceeds 3 times, the escalation will be stopped and the user will be contacted by commenting on the issue.
+RED of the same task scope is returned by xp_Director to xp_Implementer (up to 3 times).
+If it exceeds 3 times, the escalation will be stopped and the user will be contacted by commenting on the issue.
 
 ---
 
@@ -163,7 +181,7 @@ RED of the same task scope is returned by xp_Director to xp_Implementer (up to 3
 | Skill | Role |
 |---|---|
 | xp_Director | Control tower. Control the execution order and timing of all skills |
-| xp_Architect | Classify issues into Story/Task/Bug and publish sub-issues |
+| xp_Architect | Categorize issues into Story/Task/Bug and publish sub-issues |
 | xp_Tester | Create and run a test suite |
 | xp_Implementer | Implement to make tests green |
 | xp_Auditor | Test execution/quality audit/sub-issue completion report |
@@ -173,7 +191,7 @@ RED of the same task scope is returned by xp_Director to xp_Implementer (up to 3
 | xp_RunE2ETests | Run E2E tests |
 | xp_RunAllUnitTests | Run and report all unit tests |
 | xp_worklog | Total work time and report |
-| xp_review_workflow | Review the workflow and show areas for improvement |
+| xp_review_workflow | Review the workflow and indicate areas for improvement |
 
 ---
 

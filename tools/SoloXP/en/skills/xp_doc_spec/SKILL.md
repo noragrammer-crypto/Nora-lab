@@ -20,7 +20,7 @@ Generate and update functional specifications.
 Determine the spec directory in the following order of priority:
 
 | Priority | spec directory |
-|--------|------------------|
+|-------|------|
 | 1 (preferred) | if `api/<EpicName>/docs/spec/` exists |
 | 2 (Fallback) | `<EpicName>/docs/spec/` (HolyAutomater has a monorepo configuration where `api/` is dedicated to Vercel Function entry points, so most epics are here) |
 
@@ -32,7 +32,7 @@ Read `README.md` in the spec directory.
 
 ### 3. Read all issue text + comments
 
-- Get the entire history of GitHub Issue contents/comments (`gh` or MCP)
+- Get the entire history of GitHub issue contents and comments (`gh` or MCP)
 - Specification changes are often buried in comments, so check all of them.
 
 ### 4. Identify differences with existing specs
@@ -50,24 +50,26 @@ Read `README.md` in the spec directory.
 
 Update the index of `README.md` in the spec directory.
 
-### 7. Synchronize the state of related issue tables
+### 7. Synchronize the status of related issues table
 
-For each issue number listed in the "Related Issues" table of `README.md`, obtain the actual issue status (open/closed) and update the status column of the table.
+Get the actual issue status (open/closed) for each issue number listed in the "Related Issues" table of `README.md` and update the status column of the table.
 
-- Get the current state with `gh issue view <number> --json state` or MCP `mcp__github__issue_read` (method: `get`)
-- Correct rows where the table status column is out of sync with the actual state (e.g., it remains `open` even though it is closed)
+- Get the current status with `gh issue view <番号> --json state`. If `gh` cannot be used (ClaudeCodeWeb etc.)
+  Fallback to `mcp__github__issue_read` (method: `get`) (established in `xp_issue2md`〈#3204〉)
+  pattern. #3217)
+- Correct rows where the table status column is out of sync with the actual status (such as `open` even though it has been closed)
 - Essential steps to prevent READMEs from being left stale
 
 ---
 
 ## Output
 
-- `README.md` in spec directory (updated)
-- `<area>.md` in spec directory (new or updated)
+- `README.md` (updated) in spec directory
+- `<領域>.md` (new or updated) in spec directory
 
 ---
 
 ## Notes
 
 - Do not do the reverse direction of spec → stories (generating stories from spec, etc.)
-- spec records the "correctness of the current implementation". I will not write about future plans.
+- spec records the "current implementation". I will not write about future plans.

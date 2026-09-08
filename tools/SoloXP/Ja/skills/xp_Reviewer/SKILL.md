@@ -98,6 +98,9 @@ gh issue create \
   --label "bug"
 ```
 
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__issue_write`（owner, repo, method: `create`, title, body,
+labels: [`bug`]）にフォールバックする（`xp_issue2md`〈#3204〉で確立したパターン。#3216）。
+
 起票したイシュー番号をレビューレポートのコメントに追記する。
 
 ---

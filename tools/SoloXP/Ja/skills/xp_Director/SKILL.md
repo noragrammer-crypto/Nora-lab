@@ -21,7 +21,7 @@ model: claude-sonnet-4-6
 - `xp_E2Etest`（E2Eテスト作成＝受け入れ条件の定義）
 - Story-levelの受け入れ判定（`xp_Auditor test` のStory-levelフェーズ、E2E結果でのGREEN/RED判定）
 - タスクレベルの `xp_Auditor test` / `xp_Auditor doc`（独立検証・軽量だがCodexへの唯一の第三者チェックとして必須）
-- `xp_Reviewer`・main向けPR発行判断
+- `xp_Reviewer`・`xp_SecurityReviewer`・main向けPR発行判断
 
 `e2e_test_creation`（テスト著者性）と `spec_update`（GitHub API依存）タスクはこのフラグの影響を受けない。
 `bug_reproduction_test`（バグ再現テスト作成）も明示的にClaude側に残す（Tester委譲の対象外）。
@@ -55,23 +55,33 @@ model: claude-sonnet-4-6
 
 ### 1. Issue内容を読む
 
-GitHub Issue の内容を取得する（Claude Code Web: `gh` コマンド、その他: MCP経由）。
+GitHub Issue の内容を取得する（Claude Code Web: MCP経由（`gh` CLI は使えない）、その他（ローカル等）: `gh` コマンド優先、失敗時は MCP フォールバック。詳細は後述の「GitHub アクセス方法」節を参照）。
 
 ### 2. Architect への委譲判断
 
 #### 2-0. 分解済みゲート（必須・最優先）
 
-Architect への委譲判断に入る前に、イシューのコメント全件を取得し `[親ブランチ作成済み]` マーカーの有無を確認する。
+Architect への委譲判断に入る前に、イシューのコメント全件を取得し `[親ブランチ作成済み]` マーカー、
+または「判定: 単一タスク」を含む `## 実行計画` コメントの有無を確認する（単一タスク判定の場合、
+親ブランチを作らない設計のため `[親ブランチ作成済み]` は書かれない。この2つ目の条件を見落とすと、
+単一タスクの実行がPR発行前に停止した後の再開時にゲートを素通りしてしまい、`xp_Architect` を
+再度呼んでしまう）。
 タイトルの種別（`[Story]` / `[Task]` / `[Bug]` / タグなし）に関わらず必ず実施する
 （`[Task]` イシューでも観測可能変更ゲート経由で Architect 分解される場合があるため。#1337 の二重発行事故の再発防止）。
 
-**判定基準はこのマーカーのみとする。サブイシューの有無は判定に使わない**
+**判定基準はこの2つのマーカーのみとする。サブイシューの有無は判定に使わない**
 （関連タスクを手動でサブイシューに紐付ける運用があるため、「サブイシューが存在する＝分解済み」は誤判定になる）。
 
 **マーカーが ある 場合（Architect分解済み）:**
 
+0. コメント中の `## 実行計画` が「判定: 単一タスク」の場合: `xp_Architect` を呼ばない。`get_sub_issues` によるサブイシュー確認も行わない（サブイシューは存在しない）。このイシュー自体をタスクイシューとして「2. Architect への委譲判断」の「Architect 完了後（Story/Bug の場合）」分岐A の手順2以降から再開する。
 1. `xp_Architect` を呼ばない（再分解の禁止。再分解・タスク追加はユーザーの明示指示がある場合のみ Architect に委譲する）
-2. サブイシュー一覧を取得し（`mcp__github__issue_read` method: `get_sub_issues`）、各サブイシューのコメントの `[Auditor GREEN]` 有無で進捗を把握する
+2. サブイシュー一覧を取得し（`mcp__github__issue_read` method: `get_sub_issues`）、各サブイシューの完了を判定して進捗を把握する。
+   通常タスクは `[Auditor GREEN]`、`spec_update` タスク（タイトルに「機能仕様書更新」または本文に `task_type: spec_update`）は
+   `[Auditor doc OK]` の有無で判定する（`spec_update` タスクは `xp_issue2md` → `xp_doc_spec` → `xp_Auditor doc` のみを
+   通過し `[Auditor GREEN]` は構造的に出力されないため。#1831: ここを `[Auditor GREEN]` のみで判定すると、実装タスクが
+   全GREENでspec_updateも `[Auditor doc OK]` 済みのStoryが「残りサブイシューあり」と誤判定され、手順3-eのAllGREENフローへ
+   進めず `/xp_Director` が停止し続ける）
 3. 未完了のサブイシューが残っている場合: 親イシューに進捗と次アクションをコメントして停止する:
    ```
    [分解済み] 本イシューは Architect 分解済みのため再分解しません。
@@ -106,6 +116,22 @@ Architect への委譲判断に入る前に、イシューのコメント全件�
 
 **Architect 完了後（Story/Bug の場合）:**
 
+Architect の実行計画報告（`## 実行計画`）を確認し、「判定: 単一タスク」の有無で分岐する。
+
+**A. 単一タスク判定の場合（サブイシューなし・親ブランチなし）:**
+
+1. 親イシューへ作業開始を記録する（timestampは`workflow/scripts/get-jst-timestamp.js`で機械取得する。4節参照）:
+   ```
+   作業開始 <YYYY-MM-DDTHH:mm:ss+09:00>
+   セッションURL: https://claude.ai/code/session_XXXXXXXX
+   [ProjectStatus: InProgress]
+   ```
+2. 親ブランチは作成しない。現在のセッションブランチのまま「3. 実行フロー」に進み、**親イシュー番号自体をタスクイシューとして**同一ラン内で処理を継続する（1タスク1PRルールの対象は1件のみのため、ここで停止せず続けてよい）。
+3. 「3. 実行フロー」内の depends_on 解消チェック・親ブランチ確認（サブTask前処理1〜5）は行わない（該当なし）。PR発行時は `--base main` を指定し、PR本文に `Closes #<親イシュー番号>` を含める。
+4. 何らかの理由（RED差し戻し上限超過等）でPR発行前に停止した場合、次回 `/xp_Director <同じ番号>` が呼ばれたときは手順2-0で「判定: 単一タスク」の `## 実行計画` コメントを検出し、`get_sub_issues` によるサブイシュー確認は行わずこの分岐（A）から再開する。
+
+**B. 通常のサブイシュー分解の場合（合計2件以上）:**
+
 1. `feature/issue-{番号}` ブランチがリモートに存在するか確認する:
    ```bash
    git fetch origin feature/issue-{番号} 2>/dev/null && echo "exists" || echo "not found"
@@ -116,9 +142,20 @@ Architect への委譲判断に入る前に、イシューのコメント全件�
    git push -u origin feature/issue-{番号}
    ```
    既に存在する場合はスキップする（ClaudeCode Web では main から自動生成されたブランチを即リネームする）。
-3. 親 Bug/Story イシューへ作業開始を記録する:
+
+   **⚠️ 重要（親ブランチとして使ったセッション自動生成ブランチの以後の扱い、#3626）**:
+   ClaudeCode Webのセッション自動生成ブランチを `feature/issue-{番号}` にリネームしてpushした時点で、
+   そのブランチ名は「親ブランチ専用」になる。以後、そのブランチの上で直接タスクの実装作業（`xp_Tester`
+   / `xp_Implementer` 等）を行ってはならない（親ブランチへの直接コミットになり、サブタスク単位で
+   レビュー・マージするという運用が崩れる。#3621で実際に発生した事故）。本来は手順5でここに一旦
+   停止し、サブタスクは次のセッション（新しい自動生成ブランチ）で処理する。何らかの事情で同一
+   セッション内でサブタスク処理へ進む場合でも、必ず親ブランチとは別の新規ブランチを切ってから
+   作業すること（「サブTask 前処理」節の**⚠️ 重要**も参照）。
+   リネーム前のセッション自動生成ブランチ名がリモートに残っている場合は、GitHub上で削除してよい
+   （CLAUDE.md「ブランチ削除ルール」— マージのないブランチを残さない）。
+3. 親 Bug/Story イシューへ作業開始を記録する（timestampは`workflow/scripts/get-jst-timestamp.js`で機械取得する。4節参照）:
    ```
-   作業開始 YYYY-MM-DD HH:MM JST
+   作業開始 <YYYY-MM-DDTHH:mm:ss+09:00>
    セッションURL: https://claude.ai/code/session_XXXXXXXX
    [ProjectStatus: InProgress]
    ```
@@ -141,7 +178,7 @@ Architect が複数のサブイシューを発行した場合も、**1回のラ�
 | タスク種別 | 識別条件 | 処理方法 |
 |---|---|---|
 | `e2e_test_creation` | タイトルに「E2Eテストスイート作成」 または task_type: e2e_test_creation | `xp_E2Etest <親ストーリー番号>` を呼ぶ（タスク番号ではなく親ストーリー番号を渡す、常にClaude）。続くドキュメント化（`xp_doc_E2ETests`）は `implementer=codex` 指定時 `xp_DocumenterCodex` に差し替え |
-| `spec_update` | タイトルに「機能仕様書更新」 または task_type: spec_update | `xp_doc_spec <epic> <親ストーリー番号>` を呼ぶ。実装・テストは行わない（GitHub API依存のため常にClaude、`implementer=codex`の影響を受けない） |
+| `spec_update` | タイトルに「機能仕様書更新」 または task_type: spec_update | `xp_issue2md <task_issue>` → `xp_doc_spec <epic> <親ストーリー番号>` の順に呼ぶ。実装・テストは行わない（GitHub API依存のため常にClaude、`implementer=codex`の影響を受けない） |
 | `bug_reproduction_test` | タイトルに「バグ再現テスト追加」 または task_type: bug_reproduction_test | `xp_Tester <task_issue>` を呼ぶ（常にClaude、`implementer=codex`の影響を受けない）。続くドキュメント化は `implementer=codex` 指定時 `xp_DocumenterCodex` に差し替え |
 | 通常実装タスク | 上記以外 | `implementer=codex` 指定時: `xp_Tester` を省略し `xp_ImplementerCodex`（テスト作成＋実装）→ `xp_Auditor test` → `xp_DocumenterCodex` → `xp_Auditor doc`。省略時: 従来フロー（xp_Tester + xp_Implementer + xp_Auditor + xp_Documenter + xp_Auditor doc、すべてClaude） |
 
@@ -154,13 +191,31 @@ Architect が複数のサブイシューを発行した場合も、**1回のラ�
      ```bash
      gh pr list --search "#<依存先番号>" --base feature/issue-{親番号} --state merged --json number,mergedAt
      ```
+     `gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__search_pull_requests`
+     （query: `repo:<owner>/<repo> base:feature/issue-{親番号} #<依存先番号> is:merged`）にフォールバックする。
      1件もヒットしない場合（PRがまだユーザーにマージされていない）は未解消として扱う
 2. イシュー本文の「## 親ブランチ」セクションから `feature/issue-{親番号}` を取得する
 3. リモートに親ブランチが存在するか確認する:
    ```bash
    git fetch origin feature/issue-{親番号} 2>/dev/null && echo "exists" || echo "not found"
    ```
-4. 存在する場合: 現ブランチを親ブランチにリベースする:
+   **⚠️ 重要（親ブランチと作業ブランチの混同防止、#3626）**: このタイミングで、現在の
+   セッションブランチ自体が `feature/issue-{親番号}` になっていないか必ず確認する
+   （`git branch --show-current` の値と比較）。一致してしまっている場合（直前のランで
+   Architect完了後の親ブランチ作成のためセッション自動生成ブランチをリネームし、そのまま
+   同一セッション内でサブタスク処理へ進んだ場合等）、親ブランチ自体の上で直接実装作業を
+   進めてはならない。必ず親ブランチから新規の作業ブランチを切ってから続行する:
+   ```bash
+   git checkout -b task/issue-<サブタスク番号>-<内容>
+   git push -u origin task/issue-<サブタスク番号>-<内容>
+   ```
+   **`git push` を省略しない**（ClaudeCode Web 等 `gh pr create` が使えず
+   `mcp__github__create_pull_request` にフォールバックする環境では、`head` にリモートへ
+   存在しないブランチを指定するとPR発行時にエラーになる。Codexレビュー指摘・PR #3627）。
+   新しいセッション（新しい自動生成ブランチ）でサブタスクを処理する場合は、その自動生成
+   ブランチをそのまま作業ブランチとして使ってよい（親ブランチ名にリネームしない）。
+4. 存在する場合: 作業ブランチ（親ブランチとは別のブランチであること。上記確認済み）を
+   親ブランチにリベースする:
    ```bash
    git rebase origin/feature/issue-{親番号}
    ```
@@ -198,8 +253,9 @@ c. 選択したサブイシューのタスク種別を識別する
 
    【spec_update タスクの場合】（GitHub API依存のため implementer=codex の影響を受けない）
    i.   イシューの本文から親ストーリー番号を取得する
-   ii.  xp_doc_spec <epic> <親ストーリーイシュー番号>
-   iii. xp_Auditor doc <epic> <task_issue>
+   ii.  xp_issue2md <task_issue>
+   iii. xp_doc_spec <epic> <親ストーリーイシュー番号>
+   iv.  xp_Auditor doc <epic> <task_issue>
         - OK → PR発行
    → 停止
 
@@ -239,6 +295,8 @@ c. 選択したサブイシューのタスク種別を識別する
         - 親Story の feature ブランチがある場合: `--base feature/issue-{親番号}`
         - ない場合（ルートタスク）: `--base main`
         PR 本文に `Closes #<issue番号>` を含めること
+        （`gh pr create` が使えない場合（ClaudeCodeWeb等）は `mcp__github__create_pull_request`
+        （owner, repo, base, head, title, body）にフォールバックする）
 
 d. PR発行完了後、以下を順番に実行してから必ず停止する：
 
@@ -246,6 +304,8 @@ d. PR発行完了後、以下を順番に実行してから必ず停止する：
    ```bash
    gh issue close <task_issue>
    ```
+   `gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__issue_write`
+   （method: `update`, issue_number: `<task_issue>`, state: `closed`）にフォールバックする。
 
    2. ステージコメントを記録する：
    ```
@@ -268,18 +328,19 @@ e.【参考・このランでは実行しない】AllGREEN チェック・AllGRE
    1. `xp_Auditor test <epic> <親ストーリー番号>` を呼ぶ（Story-level 受け入れテスト）
       - GREEN → `[Auditor GREEN]` コメントが書き込まれる（xp_Auditor の責務はここまで）
    2. **Story-level Auditor GREEN を確認したら、xp_Director が `xp_Reviewer <epic> <親ストーリー番号>` を呼ぶ**（コードレビュー。高リスク指摘があれば改善勧告イシューを自動起票する）
-   3. `xp_Auditor doc <epic> <親ストーリー番号>` を呼ぶ（ドキュメントチェック）
-   4. `xp_RunE2ETests` で E2E テストスイートを確認する
-   5. **spec_update タスクの完了確認（AllGREEN前提条件）：**
+   3. **xp_Reviewer 完了後、xp_Director が `xp_SecurityReviewer <epic> <親ストーリー番号>` を呼ぶ**（セキュリティレビュー。組み込みスキル `security-review` を呼び出し、インジェクション・認証認可・シークレット漏洩等の観点でレビューする。高リスク指摘があれば改善勧告イシューを自動起票する。開始時に `[SecurityReviewer実行中]`、完了時に `[SecurityReviewer完了]` をイシューに記録する。詳細は `xp_SecurityReviewer` SKILL.md 参照）
+   4. `xp_Auditor doc <epic> <親ストーリー番号>` を呼ぶ（ドキュメントチェック）
+   5. `xp_RunE2ETests` で E2E テストスイートを確認する（**参考情報として実行する**。`xp_RunE2ETests` 自体は所有権判定を持たないため、他ストーリー所有の既存REDが残っている場合でも raw な `FAIL` を返し得る（#2817）。受け入れ判定の正は手順1（`xp_Auditor test` の所有権判定済み結果）とする。**本手順のFAILが手順1で既に所有権判定済み（他ストーリー所有と確認済み）のREDと一致する場合に限り**、その raw FAIL のみを理由に AllGREEN を否定しない・PR発行を見送らない。**手順1のRED一覧と一致しない新規・未分類のFAILが検出された場合は非ブロックとみなさず、`xp_Auditor test <epic> <親ストーリー番号>` を再実行して所有権判定を経てから判断する**（新規リグレッションを見逃さないため。Codexレビュー指摘・PR #3399）
+   6. **spec_update タスクの完了確認（AllGREEN前提条件）：**
       - サブイシュー一覧から `task_type: spec_update` または「機能仕様書更新」タイトルのタスクを特定する
-      - spec_update タスクは `xp_doc_spec` → `xp_Auditor doc` のみを通過し、完了マーカーは `[Auditor doc OK]`（`[Auditor GREEN]` は出力されない）
+      - spec_update タスクは `xp_issue2md` → `xp_doc_spec` → `xp_Auditor doc` のみを通過し、完了マーカーは `[Auditor doc OK]`（`[Auditor GREEN]` は出力されない）
       - 該当タスクが存在し、コメントに `[Auditor doc OK]` がない場合：AllGREEN 不成立とみなし PR を発行せず停止する。親イシューに以下を記録する：
         ```
         ⚠️ spec_update タスク (#<spec_update_issue番号>) が未完了のため AllGREEN 判定を見送ります。
         /xp_Director <spec_update_issue番号> で先に処理してください。
         ```
       - 該当タスクが存在しない、または `[Auditor doc OK]` 済みの場合のみ次へ進む
-   6. **全サブタスクPRのマージ確認（AllGREEN前提条件）：** サブタスクPR（`--base feature/issue-{親番号}`）はユーザーがマージするため（自動マージしない）、
+   7. **全サブタスクPRのマージ確認（AllGREEN前提条件）：** サブタスクPR（`--base feature/issue-{親番号}`）はユーザーがマージするため（自動マージしない）、
       `[Auditor GREEN]` / `[Auditor doc OK]` が揃っていてもPRが実際にマージ済みとは限らない。マージされていないサブタスクPRが
       親ブランチにマージされないまま先へ進むと、次で作る main 向けPRに一部のサブタスクの変更が含まれない事故になるため必ず確認する。
       `--state open` の有無だけでは「マージせずcloseされたPR」を見逃す（open が 0 件でも merged とは限らない）ため、
@@ -287,6 +348,8 @@ e.【参考・このランでは実行しない】AllGREEN チェック・AllGRE
       ```bash
       gh pr list --search "#<サブイシュー番号>" --base feature/issue-{親番号} --state merged --json number,mergedAt
       ```
+      `gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__search_pull_requests`
+      （query: `repo:<owner>/<repo> base:feature/issue-{親番号} #<サブイシュー番号> is:merged`）にフォールバックする。
       - 完了済みサブイシューのうち1件でも対応する `merged` PR が見つからない場合（未マージのままopen、または
         マージされずcloseされた場合の両方を含む）は AllGREEN 不成立とみなし PR を発行せず停止する。親イシューに以下を記録する：
         ```
@@ -294,13 +357,49 @@ e.【参考・このランでは実行しない】AllGREEN チェック・AllGRE
         オーナーによるPRマージ（closeされている場合は再オープン＋マージ）後、再度 /xp_Director <親イシュー番号> を実行してください。
         ```
       - 全完了済みサブイシューに対応する merged PR が確認できた場合のみ次へ進む
-   7. 受け入れテスト GREEN・xp_Reviewer 完了・spec_update 完了済み・全サブタスクPRマージ済みの場合：親ブランチ → main の PR を発行する：
+   8. **Issue Markdown finalize（AllGREEN成立可否には影響しない付随的な同期処理・#2971）：**
+      `xp_issueArchiveFinalize <EpicName>` を呼ぶ。対象Epic配下の `docs/issues/issue-*.MD` のうち
+      front matter が `state: open` のままGitHub上ではclosed済みになっているものを最新版へ差し替える。
+      xp_Director自身はファイルを書き換えず、呼び出しのみ行う（判断と進行管理に徹する原則を維持）。
+      本ステップの結果（走査件数・finalize件数）はAllGREENの成立・不成立の判定には使用しない
+      （`depends_on`解消・`[Auditor GREEN]`判定のSSOTにもしない。#2971の非目的）。呼び出しに失敗した
+      場合も本ステップを理由にPR発行を止めない（次回の`daily-tasks`実行時のEpic横断finalizeで
+      巻き取られるため）。
+      **finalizeで1件以上ファイルが更新された場合、次の手順9でmain向けPRを発行する前に、
+      親ブランチ（`feature/issue-{親番号}`）がチェックアウト・最新化された状態でその変更を
+      コミット・pushすること**（`xp_issueArchiveFinalize` は `xp_issue2md` を介してファイルを
+      書き換えるのみでコミット・pushまでは行わないため、これを怠ると手順9のPRが
+      `--head feature/issue-{親番号}` を指定していてもfinalizeした変更が反映されない。
+      Codexレビュー指摘・PR #3491）。更新0件の場合はコミット不要。
+   9. 受け入れテスト GREEN（手順1の所有権判定済み結果を正とする。手順5の `xp_RunE2ETests` は所有権判定を経ない参考情報であり、手順1で既に所有権判定済みのREDと一致する raw FAIL のみを理由に本条件を不成立と判断しない。**手順1のRED一覧と一致しない新規のFAILが検出された場合は本条件を不成立とし、手順1の `xp_Auditor test` からやり直す**）・xp_Reviewer 完了・xp_SecurityReviewer 完了・spec_update 完了済み・全サブタスクPRマージ済みの場合：親ブランチ → main の PR を発行する。
+      PR本文には `Closes #<親番号>` に加えて、上記1〜7の各ゲート結果（手順8のIssue Markdown finalizeは
+      ゲートではなく付随的な同期処理のため参考情報として記載する）を要約する `## AllGREEN チェック結果`
+      セクションを**必須**で含める
+      （このガードを経由せず `gh pr create --base main` を直接実行した場合に、PR本文だけでゲート通過を検知できるようにするため。#1690）：
       ```bash
-      gh pr create --base main --head feature/issue-{親番号} --title "..." --body "Closes #<親番号>"
+      gh pr create --base main --head feature/issue-{親番号} --title "..." --body "$(cat <<'PRBODY'
+      Closes #<親番号>
+
+      ## AllGREEN チェック結果
+
+      - Story-level 受け入れテスト（xp_Auditor test）: GREEN
+      - xp_Reviewer: 完了（高リスク指摘: なし / #<起票番号>）
+      - xp_SecurityReviewer: 完了（高リスク指摘: なし / #<起票番号>）
+      - xp_Auditor doc: OK
+      - xp_RunE2ETests: 確認済み（Story-level 受け入れテストとは別のE2Eスイート確認ゲート。所有権判定を経ない参考情報であり、手順1で確認済みのREDと一致するraw FAILのみでは本ゲートを不成立としない。一致しない新規FAILの場合は不成立とする）
+      - spec_update タスク: 完了（該当タスクなし / #<番号> [Auditor doc OK]）
+      - 全サブタスクPRマージ確認: 完了（#<番号>, #<番号>, ...）
+      - Issue Markdown finalize: 完了（走査<n>件・finalize<m>件 / 参考情報・AllGREEN判定には不使用）
+      PRBODY
+      )"
       ```
+      `gh pr create` が使えない場合（ClaudeCodeWeb等）は `mcp__github__create_pull_request`
+      （owner, repo, base: `main`, head: `feature/issue-{親番号}`, title, body に上記と同内容の
+      `## AllGREEN チェック結果` セクションを含める）にフォールバックする。
+      いずれかのゲート結果が要約できない（未確認・未完了）場合はこの手順に到達しておらず、PRを発行してはならない。
       発行後に以下を親イシューに記録し、ストーリーイシューをクローズする:
       - `[親ブランチ PR 発行済み]`
-      - `作業完了 YYYY-MM-DD HH:MM JST / 所要時間: XX分`（最初のサブタスク着手から現在まで）
+      - `作業完了 <YYYY-MM-DDTHH:mm:ss+09:00> / 所要時間: XX分`（最初のサブタスク着手から現在まで。timestampは`workflow/scripts/get-jst-timestamp.js`で機械取得する）
    → 受け入れテスト（E2E）失敗時：xp_Auditor が失敗内容で新サブイシューを起票し、ストーリーは継続する
    → xp_Director はここで停止する（Auditor が以降の制御を担当する）
 ```
@@ -326,20 +425,25 @@ e.【参考・このランでは実行しない】AllGREEN チェック・AllGRE
 
 **ワークログコメント（必須）：**
 
+現在時刻は `node workflow/scripts/get-jst-timestamp.js`（`workflow/lib/get-jst-timestamp.js` の
+`getCurrentJstTimestamp()`）でランタイムから機械取得し、Asia/Tokyoへ変換したオフセット付きISO 8601
+（`YYYY-MM-DDTHH:mm:ss+09:00`）を使う。LLM自身が現在時刻やUTC→JST変換を推測してはならない（#3279/#3281）。
+
 タスク着手時（xp_Tester 開始前）に記録する：
 ```
-作業開始 YYYY-MM-DD HH:MM JST
+作業開始 <YYYY-MM-DDTHH:mm:ss+09:00>
 セッションURL: https://claude.ai/code/session_XXXXXXXX
 [ProjectStatus: InProgress]
 ```
 
 [Auditor GREEN] 確認後に記録する：
 ```
-作業完了 YYYY-MM-DD HH:MM JST / 所要時間: XX分
+作業完了 <YYYY-MM-DDTHH:mm:ss+09:00> / 所要時間: XX分
 ```
 
 所要時間は `作業開始` から `[Auditor GREEN]` までの実時間（分）を記録する。
-JST明記のない過去の作業時間コメントはUTCとして解釈する。新規コメントでは必ず `JST` を付ける。
+既存の `YYYY-MM-DD HH:mm JST` 形式（`JST` 明記のない場合はUTC解釈）はlegacy互換として引き続き認識するが、
+新規コメントでは必ず機械取得したオフセット付きISO 8601形式を使う。
 
 ### 5. depends_on 解消判断
 
@@ -354,10 +458,20 @@ JST明記のない過去の作業時間コメントはUTCとして解釈する�
 
 | 環境 | アクセス方法 |
 |---|---|
-| Claude Code Web | `gh` コマンド |
-| claude.ai / その他 | MCP経由 |
+| Claude Code Web | MCP経由（`gh` CLI はアウトバウンドプロキシの制約で使えない。GraphQL/REST いずれも「このセッションでは有効化されていない」エラーで失敗する） |
+| claude.ai / その他（ローカル・Codespaces等） | `gh` コマンド優先。失敗時（未インストール・認証エラー・`HTTP 403`等）はMCPにフォールバックする |
 
-環境を検出して自動切り替えする。
+**⚠️ 2026-08-28以前の記載は逆だった（#3214で修正）。** 環境を検出して自動切り替えること（ClaudeCode Web の判定は
+セッション環境から行う。誤って「Claude Code Web だから `gh` が使える」と判断しないこと）。
+
+`gh` 優先→失敗時MCPフォールバック→フィールド正規化のパターンは `xp_issue2md`（#3204）で確立済み。
+本スキル内の主な対応は以下の通り：
+
+| `gh` コマンド | 用途 | MCP フォールバック |
+|---|---|---|
+| `gh pr list --search "#<番号>" --base <branch> --state merged` | depends_on解消チェック・全サブタスクPRマージ確認 | `mcp__github__search_pull_requests`（query: `repo:<owner>/<repo> base:<branch> <番号> is:merged`）または `mcp__github__list_pull_requests`（state: closed→`merged`で絞り込み） |
+| `gh issue close <task_issue>` | タスクイシューの明示クローズ | `mcp__github__issue_write`（method: `update`, issue_number, state: `closed`） |
+| `gh pr create --base main` / `--base feature/issue-{番号}` | PR発行（タスクPR・AllGREEN後のmain向けPR） | `mcp__github__create_pull_request`（owner, repo, base, head, title, body） |
 
 **⚠️ gh CLI の制約:** `gh issue view --json subIssues` は未対応。
 サブイシュー取得は環境問わず `mcp__github__issue_read`（method: `get_sub_issues`）を使用すること。

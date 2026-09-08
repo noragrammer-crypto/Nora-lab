@@ -57,7 +57,40 @@ gh pr list --repo noragrammer-crypto/HolyAutomater \
   --state all --limit 200 \
   --json number,title,labels,comments,body,createdAt,closedAt,updatedAt,mergedAt \
   > /tmp/xp_review_prs.json
+```
 
+`gh` が使えない場合（ClaudeCodeWeb等）は、`gh issue list` を `mcp__github__list_issues`（owner, repo,
+`fields` は省略して全フィールド取得〈`closed_at` を含めるため。`fields` で絞ると `closed_at` が
+返らずクローズ日時フィルタが機能しなくなる〉、`state` も省略して全件対象、`pageInfo.hasNextPage` に
+応じて `after` でページングして200件相当まで取得）に、`gh pr list` を `mcp__github__list_pull_requests`
+（owner, repo, state: `all`、`fields` は同様に省略、`page`/`perPage` でページング）にフォールバックする。
+
+**MCPレスポンスは後続のPython処理が読む `gh --json` 形式と異なるため、/tmpファイルへ保存する前に
+以下の正規化を行う（Codexレビュー指摘・#3258。単に生のMCPレスポンスを保存すると、`created_at`/
+`updated_at` しか無く `createdAt`/`updatedAt` を読む `in_range()` が常にFalseを返し、労働時間集計
+イシュー・PRが1件もヒットしなくなる）：**
+
+```python
+def normalize(items):
+    out = []
+    for it in items:
+        labels = [{'name': l} if isinstance(l, str) else l for l in it.get('labels', [])]
+        out.append({
+            **it,
+            'createdAt': it.get('created_at', it.get('createdAt')),
+            'updatedAt': it.get('updated_at', it.get('updatedAt')),
+            'closedAt': it.get('closed_at', it.get('closedAt')),
+            'mergedAt': it.get('merged_at', it.get('mergedAt')),
+            'labels': labels,
+        })
+    return out
+```
+
+MCPで取得した issues / prs のリストをこの `normalize()` に通した結果を `/tmp/xp_review_issues.json` /
+`/tmp/xp_review_prs.json` に保存し、以降のPython処理（`in_range()` 等）は無改変のまま使う
+（`xp_issue2md`〈#3204〉で確立したフィールド正規化パターンに準拠する。#3217, #3258）。
+
+```bash
 python3 -c "
 import sys, json, datetime
 since = datetime.datetime.fromisoformat('${SINCE}T00:00:00+00:00')

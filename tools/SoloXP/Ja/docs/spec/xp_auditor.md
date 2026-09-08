@@ -38,8 +38,9 @@ xp_Auditor はテスト実行・結果分析・品質報告を担うスキル。
 2. `xp_RunTestSuites` 経由で Unit + Functional テストを実行する
 3. **E2E テストの判断（Story-level Auditor フェーズ）**：タスクイシュー単体の場合は E2E をスキップする。xp_Director から AllGREEN 後に `xp_Auditor test <epic> <story>` として呼ばれた場合は **Story-level Auditor フェーズ** を実行する：
    - `xp_RunE2ETests` で E2E テストを実行する
-   - GREEN（自ストーリーが所有するブロック対象がゼロ件） → `[Auditor GREEN]` をストーリーイシューに記録し **xp_Director に返す**。xp_Reviewer 呼び出し・PR 発行・ストーリークローズは xp_Director の責務
-   - RED → バグイシューを起票し、**所有権ベースの非対称ブロック（#2807/#2809）** を適用する：既存バグイシューの親が自ストーリー、または親未設定で新規に所有権を取得した場合はブロック（ストーリー継続・クローズしない）。親が**他のオープンなストーリー**の場合はブロックしない（重複検知コメントのみ記録して先へ進む。#2807 の相互ロック解消）
+   - **GREEN/RED 判定は E2E 単独でなく、2. の Unit + Functional 総合判定も対象に含める（#2814）**
+   - GREEN（自ストーリーが所有するブロック対象がゼロ件。Unit + Functional 総合判定と E2E の両方が対象） → `[Auditor GREEN]` をストーリーイシューに記録し **xp_Director に返す**。xp_Reviewer 呼び出し・PR 発行・ストーリークローズは xp_Director の責務
+   - RED → バグイシューを起票し（Unit/Functional/E2E のいずれかで RED がある場合。テスト種別を問わず同一ロジック）、**所有権ベースの非対称ブロック（#2807/#2809）** を適用する：既存バグイシューの親が自ストーリー、親未設定、または親ストーリーが既に**クローズ済み**（`replace_parent: true` で現ストーリーへ付け替え、所有権を再取得。#2818）で新規に所有権を取得した場合はブロック（ストーリー継続・クローズしない）。親が**他のオープンなストーリー**の場合はブロックしない（重複検知コメントのみ記録して先へ進む。#2807 の相互ロック解消）
    - E2E 実行不可 → `[E2E スキップ]` コメントを記録しユーザーに委ねる
    - **スコープ限定（#2784）**: 下記4.の「別タスクスコープ」判断基準（現タスクのテスト結果には影響しない）は Task-level 専用であり、Story-level Auditor フェーズには適用されない・援用できない。既知・別タスクスコープの RED であっても、Story-level では所有権判定（上記）に従う
 
@@ -103,7 +104,15 @@ FAIL: n件
 
 1. `<EpicName>/docs/spec/README.md` の索引整合性を確認する
 2. 各 spec ドキュメントの内容が薄すぎないか確認する
-3. イシューにチェック結果をコメントする：
+3. **PR Summary と `git diff --stat` の整合性チェック（#2625）**：base を「タスクPRなら
+   `origin/feature/issue-{親番号}`、ルートタスクなら `origin/main`、Story-level AllGREENフローなら
+   `origin/feature/issue-{親番号}` を明示的にfetchして対象とし `origin/main` を base」として解決し、
+   `git diff --stat <base>`（第2引数省略・作業ツリー比較。未コミット変更も検出対象に含める）を取得し、
+   イシュー本文・ステージコメントに記載された想定変更範囲と比較する。乖離が大きい場合（説明にない
+   大量のファイル追加・削除等）は NG とし `[Auditor doc OK]` を出さない（過去に PR #2426 で Summary
+   「2ファイル追加のみ」に対し実際はリポジトリ全体8385ファイル削除という乖離を検出できず、緊急revert
+   （PR #2428）が必要になった事故がある）
+4. イシューにチェック結果をコメントする：
 
 ```
 [Auditor ドキュメントチェック中]
@@ -111,9 +120,10 @@ FAIL: n件
 ### ドキュメントチェック結果
 - spec/README.md: <OK / NG: 理由>
 - spec/<領域>.md: <OK / NG: 理由>
+- diffスコープ整合性: <OK / NG: 理由（git diff --stat件数 vs 想定範囲）>
 ```
 
-4. OK の場合: xp_Director に OK を返す（PR 発行は xp_Director の責務）：
+5. OK の場合: xp_Director に OK を返す（PR 発行は xp_Director の責務）：
 ```
 [Auditor doc OK]
 xp_Director がPRを発行します。
@@ -123,6 +133,21 @@ xp_Director がPRを発行します。
 
 - OK: `[Auditor doc OK]` を記録して Director に返す。PR発行は Director の責務
 - NG: 問題点を添えて返す
+- NG（diffスコープ不整合）: `[Auditor doc NG: diffスコープ不整合]` として、実際の変更範囲が
+  イシューの想定と乖離している旨を明記して返す。`[Auditor doc OK]` は出さない
+
+---
+
+## GitHub アクセス方法・MCPフォールバック
+
+ClaudeCodeWeb 環境では `gh` CLI が使えない（`HTTP 403` 等）。`gh` 優先→失敗時MCPフォールバック→
+フィールド正規化のパターンは `xp_issue2md`（#3204）で確立済みで、本スキルにも適用済み（#3216）：
+
+| `gh` コマンド | 用途 | MCP フォールバック |
+|---|---|---|
+| `gh issue comment`（重複検知・完了報告） | イシューへのコメント記録 | `mcp__github__add_issue_comment` |
+| `gh issue create`（バグ自動起票） | 別タスクスコープのバグ発見時の新規イシュー起票 | `mcp__github__issue_write`（method: `create`, labels） |
+| `gh issue view --json state`（親イシュー状態確認） | 重複バグの親ストーリー状態判定 | `mcp__github__issue_read`（method: `get`） |
 
 ---
 

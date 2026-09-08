@@ -54,7 +54,8 @@ xp_Director に結果を返す。**ワークフロー制御は xp_Director の�
 
 `xp_RunTestSuites` SKILL.md を読み込み、その手順に従って Unit + Functional テストを実行する。
 
-結果（標準出力・エラー出力）を全文記録する。
+結果（標準出力・エラー出力）を全文記録する。ストーリーイシューの場合、この結果（`xp_RunTestSuites`
+の「### 総合判定」）は 3節「Story-level Auditor フェーズ」の GREEN/RED 判定に組み込む。
 
 ### 3. E2E テストの判断・Story-level Auditor フェーズ
 
@@ -64,15 +65,24 @@ xp_Director に結果を返す。**ワークフロー制御は xp_Director の�
 
 > **重要（スコープ限定）**: 6節「別タスクスコープのバグ発見時」の「現タスクのテスト結果には影響しない」という判断基準は Task-level専用であり、本フェーズ（Story-level）には適用されない・援用できない。既知・別タスクスコープのREDであっても、Story-levelでは所有権判定（本節）に従って処理する。
 
+> **重要（Unit/Functional の合算判定・#2814）**: 本フェーズの GREEN/RED 判定は E2E（本節1.）
+> のみでなく、2節で実行した Unit + Functional の結果（`xp_RunTestSuites` の「### 総合判定」）も
+> 判定対象に含める。ただし合算の結果を無条件にGREEN/RED判定へ反映するのではなく、下記2./3.の
+> 所有権判定を経由する：E2Eが全PASSでも、2節の総合判定に**自ストーリーが所有するブロック対象**の
+> REDが残っている場合はGREENと判定しない。一方、2節のREDがすべて他ストーリー所有の非ブロック
+> 対象であるケースは、E2E側と同様に2.のGREEN条件どおりGREENとなり得る（所有権ベースの非対称
+> ブロック〈#2807/#2809/#2818〉が適用されるのはテスト種別を問わず同一のため、Unit/Functional
+> のREDだけを例外的に無条件ブロック化しない）。
+
 **Story-level Auditor フェーズ（xp_Auditor test \<epic\> \<story\>）**
 
 1. 親ブランチ `feature/issue-{story}` に対して E2E テストを実行する（`xp_RunE2ETests` SKILL.md を読み込み手順に従う）
 
-2. GREEN の場合（自ストーリーが所有するブロック対象がゼロ件であることを条件とする。E2E 全PASS、または残存 RED がすべて他ストーリー所有の非ブロック対象であるケースを含む）：ストーリーイシューに `[Auditor GREEN]` を記録する
+2. GREEN の場合（自ストーリーが所有するブロック対象がゼロ件であることを条件とする。2節の Unit + Functional 総合判定と 1. の E2E 結果の両方が対象 — 全PASS、または残存 RED がすべて他ストーリー所有の非ブロック対象であるケースを含む）：ストーリーイシューに `[Auditor GREEN]` を記録する
 
    **GREEN を xp_Director に返す。xp_Reviewer 呼び出し・PR発行・ストーリークローズは xp_Director の責務。**
 
-3. RED の場合：失敗した E2E テストの内容でバグイシューを起票し、所有権ベースの非対称ブロックを適用する
+3. RED の場合（2節の Unit/Functional、または 1. の E2E のいずれかで RED がある場合）：失敗した Unit/Functional/E2E テストの内容でバグイシューを起票し、所有権ベースの非対称ブロックを適用する（テスト種別によって所有権判定のロジックは変えない。以下の分岐は種別を問わず同一に適用する）
    - 起票前に同内容のオープンな `bug` イシューが既に存在しないか確認する（`search_issues` の `label:bug` + キーワード）
    - **既存イシューが見つかった場合**: 新規発行せず、既存イシューへ重複検知コメントを追加する
      （`workflow/docs/spec/issue-triage.md` 3節のプロトコル、`<!-- hot-issue-dup -->` マーカー必須）。
@@ -86,10 +96,17 @@ xp_Director に結果を返す。**ワークフロー制御は xp_Director の�
        - ストーリーは継続（クローズしない）
      - **親が自ストーリーの場合**: 既に自ストーリーが所有権を持っているため
        - ストーリーは継続（クローズしない）
-     - **既に別の親（他のストーリー等）に紐付いている場合**: 付け替えない。別ストーリーの
-       追跡を壊さないことを優先し、重複検知コメントとストーリーへの参照記録のみに留める。
-       親が**他のオープンなストーリー**である場合、そのバグの所有権は当該ストーリーにあるため、
-       現ストーリーは**ブロックしない**（重複検知コメントのみ記録して先に進む。#2807 の相互ロック解消）
+     - **既に別の親（他のストーリー等）に紐付いている場合**: 親ストーリーの状態（`state`）を
+       確認する（`mcp__github__issue_read` method: `get`、または `gh issue view <親番号> --json state`）
+       - **親が他のオープンなストーリーの場合**: 付け替えない。別ストーリーの追跡を
+         壊さないことを優先し、重複検知コメントとストーリーへの参照記録のみに留める。
+         そのバグの所有権は当該ストーリーにあるため、現ストーリーは**ブロックしない**
+         （重複検知コメントのみ記録して先に進む。#2807 の相互ロック解消）
+       - **親が既にクローズ済みのストーリーの場合**: そのバグを実際に直す主体
+         （オープンなストーリー）はもう存在しないため、**親未設定の場合と同様に扱う**。
+         `replace_parent: true` を指定して現ストーリーへ親を付け替え、所有権を再取得する。
+         付け替えた旨をイシューにコメントする（#2818）
+         - ストーリーは継続（クローズしない）
      ストーリーイシューには既存イシュー番号を参照として記録する
    - **見つからない場合**: 新規バグイシューを起票する。自ストーリーのサブイシューとして紐付け、所有権を取得する
      - バグイシューの本文に `## 親ブランチ: feature/issue-{story}` を含める
@@ -166,6 +183,8 @@ gh issue comment <既存イシュー番号> \
 同内容の失敗を再検知しました。"
 ```
 
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__add_issue_comment`（owner, repo, issue_number: `<既存イシュー番号>`, body: 上記と同内容）にフォールバックする。
+
 現在のイシューにも記録する：
 ```
 [Bug イシュー重複検知 #<既存イシュー番号>]
@@ -197,6 +216,9 @@ gh issue create \
 feature/issue-<親ストーリーイシュー番号>" \
   --label "bug,epic/<epic名>"
 ```
+
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__issue_write`（owner, repo, method: `create`, title,
+body, labels: [`bug`, `epic/<epic名>`]）にフォールバックする。
 
 発行後、現在のイシューにも記録する：
 ```
@@ -235,7 +257,8 @@ FAIL: n件
 サブイシュー #<番号> 完了。残り: #<番号>, #<番号>
 ```
 
-GREEN 確認後、親イシューへ完了コメントを書き込む（`gh issue comment <親イシュー番号>`）。
+GREEN 確認後、親イシューへ完了コメントを書き込む（`gh issue comment <親イシュー番号>`。`gh` が使えない場合は
+`mcp__github__add_issue_comment`（owner, repo, issue_number: `<親イシュー番号>`, body: 完了報告の内容）にフォールバックする）。
 全サブイシューが完了した場合は、xp_Director が `xp_Auditor test <epic> <story>` を呼ぶ（Story-level Auditor フェーズ）。
 
 ### 9. xp_Director に結果を返す
@@ -266,6 +289,38 @@ GREEN 確認後、親イシューへ完了コメントを書き込む（`gh issu
 3. 存在する場合、ファイル内のコメント件数・最終コメントの日時を GitHub イシュー側の実際のコメント件数・最新コメント日時と比較する → 一致しなければ **陳腐化（NG）**
 4. 一致すれば **OK**
 
+### 2.5. PR Summary と実際の変更範囲（git diff --stat）の整合性チェック
+
+過去に、PR本文のSummaryが「2ファイル追加のみ」と記載されていたにもかかわらず、実際のマージコミットは
+リポジトリ全体8385ファイルを削除する内容だったという事故がある（PR #2426、緊急revert PR #2428、#2625）。
+`[Auditor doc OK]` → `[Auditor GREEN]` の判定を経てマージされてしまい、ファイル数・行数が本文の説明と
+大きく乖離していても検出できていなかった。doc モードは以下の手順でこの乖離を検出する。
+
+1. 比較対象の base を以下の通り解決する（**ローカルに存在するとは限らないブランチ名をそのまま
+   `git diff` に渡さない**。タスク前処理で `git fetch origin feature/issue-{親番号}` は行うが、
+   同名のローカルブランチは作成されないため、必ず `origin/` 付きのリモート追跡ブランチを使う）：
+   - タスクPR（親ブランチがある場合）: `git fetch origin feature/issue-{親番号}` 済みの
+     `origin/feature/issue-{親番号}` を base とする
+   - ルートタスク（親ブランチがない場合）の main 向けPR: `origin/main` を base とする
+   - Story-level AllGREENフロー（`xp_Auditor doc <epic> <story>` を単独ランで呼ばれる場合）:
+     このランでは PR の head となる `feature/issue-{親番号}` がチェックアウトされているとは
+     限らない（xp_Director は別ランで `--head feature/issue-{親番号}` として PR を作成する）。
+     現在のセッションブランチをそのまま比較してはならず、`git fetch origin feature/issue-{親番号}`
+     で取得した `origin/feature/issue-{親番号}` を明示的に対象とし、base は `origin/main` とする
+2. `git diff --stat <base>` を実行し、変更ファイル数・追加/削除行数を取得する（第2引数（比較先）を
+   省略し、base コミットと**作業ツリー**を比較する。`xp_Implementer`・`xp_Documenter` はこの時点で
+   コミットしているとは限らないため、`<base>...HEAD` のようなコミット間比較では、未コミットの
+   大量削除など本チェックが検出すべき変更を見逃す。Story-level AllGREENフローで対象が
+   `origin/feature/issue-{親番号}` の場合は、その先端コミットと作業ツリーを比較する
+   （`git diff --stat origin/feature/issue-{親番号}` 相当。作業ツリーが未チェックアウトの場合は
+   `git diff --stat origin/main origin/feature/issue-{親番号}` のコミット間比較にフォールバックする）
+3. イシュー本文の `## 概要`・過去のステージコメント（`[Tester完了]` `[Implementer完了]` 等）に
+   記述された想定変更範囲（対象ファイル・変更内容）と比較する
+4. 乖離が大きい場合（例: 説明にない大量のファイル追加・削除、対象範囲外ディレクトリへの変更、
+   リポジトリ全体規模の変更等）は **NG** とし、`[Auditor doc OK]` を出さず要確認として
+   xp_Director に差し戻す
+5. 乖離がない、または軽微な場合は **OK** として次のステップへ進む
+
 ### 3. イシューにチェック結果をコメント
 
 ```
@@ -276,6 +331,7 @@ GREEN 確認後、親イシューへ完了コメントを書き込む（`gh issu
 - spec/<領域>.md: <OK / NG: 理由>
 - reference/: <OK / NG: 理由>
 - issue2mdログ: <OK / NG: 欠落 / NG: 陳腐化（GitHub上 n件 / ログ上 m件）>
+- diffスコープ整合性: <OK / NG: 理由（git diff --stat件数 vs 想定範囲）>
 ```
 
 ### 4. OK の場合: xp_Director に OK を返す
@@ -297,6 +353,15 @@ xp_Director がPRを発行します。
   対象: <EpicName>/docs/issues/issue-<issue_number>.MD
   理由: 欠落 / 陳腐化（GitHub上 n件 / ログ上 m件）
   xp_Director は xp_Documenter に issue2md の再実行を差し戻してください。
+  ```
+- NG（diffスコープ不整合）: 「diffスコープ不整合」として、実際の変更範囲がイシューの想定と
+  大きく乖離していることを明記して返す（`[Auditor doc OK]` は出さない）
+  ```
+  [Auditor doc NG: diffスコープ不整合]
+  git diff --stat <base>...HEAD: <n>ファイル変更（+X/-Y行）
+  イシュー記載の想定範囲: <要約>
+  乖離: <詳細（例: 想定外の一括削除・想定外ディレクトリへの変更 等）>
+  xp_Director はユーザーに確認を仰ぐか、実装を差し戻してください。
   ```
 
 ---

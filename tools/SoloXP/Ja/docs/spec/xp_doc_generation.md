@@ -48,3 +48,9 @@ HolyAutomater 内には unit/functional テストの配置が3系統混在して
 ディレクトリを解決する。生成側（`xp_doc_spec`）と監査側（`xp_Auditor`）でパス解決ロジックが
 食い違うと、非apiエピックで「正しく生成されたspecを存在しないと誤判定する」事故になるため、
 両者は常に同じ優先順位を参照する。
+
+### GitHub アクセス方法・MCPフォールバック
+
+`xp_doc_spec`「## 関連イシュー表の状態を同期する」の `gh issue view --json state` は、`gh` が使えない
+環境（ClaudeCodeWeb等）では `mcp__github__issue_read`（method: `get`）にフォールバックする
+（`xp_issue2md`〈#3204〉で確立したパターン。#3217）。

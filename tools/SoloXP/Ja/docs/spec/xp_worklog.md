@@ -144,6 +144,11 @@ GitHub コメントの `createdAt`（UTC）を推定値として使用。`(※�
 ### issue2md の再実行
 `worklog/worklog_timestamp.md` の最終処理番号から再実行し `worklog_timestamp.md` を更新。
 
+### GitHub アクセス方法・MCPフォールバック
+オープンイシュー数の参考カウント（`gh issue list --state open --json number`）は、`gh` が使えない環境
+（ClaudeCodeWeb等）では `mcp__github__list_issues`（state: OPEN, fields: [number]）にフォールバックし、
+1ページ最大100件のためページングして件数を積算する（`xp_issue2md`〈#3204〉で確立したパターン。#3217）。
+
 ## 関連イシュー
 
 | イシュー | タイトル | 状態 |

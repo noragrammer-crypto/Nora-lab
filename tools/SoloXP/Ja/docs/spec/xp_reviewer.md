@@ -58,6 +58,10 @@ AllGREEN → xp_RunE2ETests → ✅ GREEN → xp_Reviewer → PR発行 → イ�
 - タイトル: `[改善勧告] <指摘の概要>`
 - ラベル: `bug`
 
+改善勧告イシューの起票（`gh issue create`）は、`gh` が使えない環境（ClaudeCodeWeb等）では
+`mcp__github__issue_write`（method: `create`, labels: [`bug`]）にフォールバックする
+（`xp_issue2md`〈#3204〉で確立したパターン。#3216）。
+
 ---
 
 ## 注意事項

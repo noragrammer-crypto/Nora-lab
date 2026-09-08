@@ -6,66 +6,78 @@ model: claude-sonnet-4-6
 
 ## Overview
 
-Judges a single Codex issue (`@chatgpt-codex-connector`) that was auto-generated from a PR review: if the finding is convincing, fixes it and opens a PR; if not, comments with the reason and applies the `ignore` label.
+Codex (`@chatgpt-codex-connector`) determines a single Codex issue automatically generated from PR reviews,
+If you are satisfied with it, make the corrections and submit a PR. If you are not satisfied, please comment the reason and label it as `ignore`.
 
-Split out of `/ProcessIssue`'s Workflow 4 as a dedicated skill (#2907). Issue selection, block-condition checks, and the decision of whether consecutive processing is allowed are all handled by the caller, `/ProcessIssue`; this skill's sole job is judging, fixing, and opening a PR for the one Codex issue it was handed. Because that judgment is substantive review work — reading and evaluating whether code is actually correct — it keeps a high-accuracy model (Sonnet) separate from `/ProcessIssue` (Haiku).
+Dedicated skill (#2907) separated from workflow 4 of `/ProcessIssue`. Issue selection/block judgment/
+The caller `/ProcessIssue` determines whether or not continuous processing is possible, and this skill processes one selected Codex issue.
+Responsible only for judgment, correction, and PR creation. This judgment is a substantial review work to decipher the validity of the code, so
+Maintain high accuracy model (Sonnet) separately from `/ProcessIssue` (Haiku).
 
 ---
 
 ## Command
 
-### `/ProcessCodexIssue <issue number>`
+### `/ProcessCodexIssue <issue番号>`
 
-Processes the single specified Codex issue.
+Process one specified Codex issue.
 
 ---
 
 ## Responsibilities
 
-- Reading and judging the validity of the finding in the specified issue
-- Implementing a fix and opening a PR when the finding is convincing
-- Commenting with the reason and applying the `ignore` label when it is not
+- Reading and determining the validity of the points raised in one designated issue
+- Modified implementation and PR creation if acceptable
+- If you are not satisfied, comment the reason/`ignore` Label
 
 ---
 
-## Prerequisites
+## Assumptions
 
-Assumes the caller (`/ProcessIssue`) has already confirmed:
+Assuming that the caller (`/ProcessIssue`) has confirmed the following:
 
-- The title is in the format `**<sub><sub>![P1 Badge]` or `**<sub><sub>![P2 Badge]`
-- The body contains `@chatgpt-codex-connector`
-- Blocking conditions such as InProgress and `depends_on` have been cleared
+- Title is in `**<sub><sub>![P1 Badge]` or `**<sub><sub>![P2 Badge]` format
+- body contains `@chatgpt-codex-connector`
+- Clears blocking conditions such as InProgress and depends_on
 
-When calling this skill on its own (e.g. for manual, one-off processing), confirm the above conditions yourself first.
+When invoking it alone (e.g. manual individual processing), the above assumptions should be confirmed separately on the calling side.
 
 ---
 
 ## Processing flow
 
-### 1. Fetch the issue's content
+### 1. Get issue contents
 
 ```bash
-gh issue view <issue number> --json title,body,comments --repo <owner>/<repo>
+gh issue view <issue番号> --json title,body,comments --repo <owner>/<repo>
 ```
 
-### 2. Read the finding and judge whether it's convincing
+If `gh` cannot be used (such as ClaudeCodeWeb), use `mcp__github__issue_read` (method: `get`, issue_number).
+Comment the text with `mcp__github__issue_read` (method: `get_comments`, issue_number, perPage: 100)
+Get (pattern established in `xp_issue2md`〈#3204〉. #3218).
 
-Read the title and body, and — taking the context of the affected code into account — judge whether the finding is technically valid.
+### 2. Read the content and decide whether you agree with it.
 
-### 3-A. If convincing
+Read the content pointed out in the title + body, and judge whether it is technically appropriate based on the context of the target code.
 
-- Identify and fix the affected file(s) (no need to run the full test suite)
-- Create a `feature/issue-{number}` branch, commit the fix, and push it
-- Open a PR that includes `Closes #<number>`
+### 3-A. If you are satisfied
 
-### 3-B. If not convincing
+- Identify and fix target files (no need to run the entire test suite)
+- Create `codex/issue-{番号}` branch and commit/push your fixes
+  (Do not use `feature/issue-*`. All GREEN marker required check (`.github/workflows/allgreen-check.yml`,
+  #1691/#3037) is the parent issue's `[Auditor GREEN]`/`[Auditor doc OK]` for all `feature/issue-*` branches.
+  Requests a marker, but Codex issues do not pass through xp_Director/xp_Tester/xp_Auditor due to policy.
+  The marker is not attached structurally and CI always fails. Discovered in #3055)
+- Create a PR to include `Closes #<番号>`
 
-- Comment on the issue with the reason
-- Apply the `ignore` label and stop
+### 3-B. If you are not satisfied
+
+- Comment the issue with the reason
+- Exit with label `ignore`
 
 ---
 
 ## Notes
 
-- Only one issue is processed per invocation (whether consecutive processing is allowed is decided by the caller, `/ProcessIssue`)
+- Only one issue is processed in one call (the caller `/ProcessIssue` determines whether continuous processing is possible)
 - If in doubt, ask the user

@@ -1,14 +1,18 @@
 # xp_review_workflow functional specifications
 
-## overview
+## Overview
 
-xp_review_workflow is a skill responsible for reviewing workflows and detecting deviations. Analyze comment patterns in issue logs and identify differences from expected workflow achievement conditions. Report only one improvement proposal. **Do not modify files. It ends with just a report.**
+xp_review_workflow is a skill responsible for reviewing workflows and detecting deviations.
+Analyze comment patterns in issue logs and identify differences from expected workflow achievement conditions.
+Report only one improvement proposal. **Do not modify files. It ends with just a report. **
 
 ## Command
 
 ### `/xp_review_workflow`
 
-Looking back at the XP Skills workflow, identify and report on just one point where you think, “If it had been written this way, it would have worked better.”
+Looking back at the XP skills workflow,
+“If this part had been written like this, it would have worked better.”
+Identify and report **just one** location.
 
 ---
 
@@ -26,12 +30,12 @@ Comment patterns indicating successful completion of each skill (expected achiev
 
 | Skills | Expected achievement conditions |
 |---|---|
-| xp_Architect | `[Architect completed]` or sub-issue publication comment |
-| xp_Tester | `[Tester completed]` |
-| xp_Implementer | `[Implementer completed]` |
+| xp_Architect | `[Architect完了]` or sub-issue publication comment |
+| xp_Tester | `[Tester完了]` |
+| xp_Implementer | `[Implementer完了]` |
 | xp_Auditor (test) | `[Auditor GREEN]` |
-| xp_Auditor (doc) | `[PR issued #\d+]` |
-| xp_Documenter | `[Documenter completed]` |
+| xp_Auditor (doc) | `[PR発行済み #\d+]` |
+| xp_Documenter | `[Documenter完了]` |
 
 ---
 
@@ -39,10 +43,10 @@ Comment patterns indicating successful completion of each skill (expected achiev
 
 Identify deviant issues using the following patterns:
 
-- Issues without `[Implementer running]` after `[Tester completed]`
-- Issues without `[Auditor GREEN]` after `[Implementer completed]`
+- Issues without `[Implementer実行中]` after `[Tester完了]`
+- Issues without `[Auditor GREEN]` after `[Implementer完了]`
 - Issues where the same phase is repeated three or more times (remand loop)
-- Issues with `[PR issued]` recorded without `[Auditor GREEN]`
+- Issues with `[PR発行済み]` recorded without `[Auditor GREEN]`
 
 ---
 
@@ -59,20 +63,28 @@ If a deviation is found, identify which SKILL.md is the cause (identifying the c
 ## Report format
 
 ```
-## Workflow review
+## ワークフロー振り返り
 
-### Issues
-"<Section Name>" of <Skill Name>
+### 課題箇所
+<スキル名>の「<セクション名>」
 
-### Current writing problem
-<What exactly happened/How was it misunderstood?>
+### 現状の書き方の問題
+<具体的に何が起きたか / どう誤解されたか>
 
-### Improvement proposal (one word)
-<How should I rewrite it?>
+### 改善案（一言）
+<どう書き直せばよいか>
 
-### Issue based on
-- #<number> <title> (<reason>)
+### 根拠となったイシュー
+- #<番号> <タイトル>（<理由>）
 ```
+
+---
+
+## GitHub access method/MCP fallback
+
+Issue/PR log acquisition (`gh issue list` / `gh pr list`) is not possible in environments where `gh` cannot be used (such as ClaudeCodeWeb).
+`mcp__github__list_issues` / `mcp__github__list_pull_requests` (Page to get up to 200 results)
+(pattern established in `xp_issue2md`〈#3204〉. #3217).
 
 ---
 

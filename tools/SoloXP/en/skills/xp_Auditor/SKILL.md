@@ -9,7 +9,7 @@ model: claude-sonnet-4-6
 ### `xp_Auditor test <epic> <issue>`
 
 Run tests, analyze results, and comment on issues.
-Returns results to xp_Director. **Workflow control is the responsibility of xp_Director.**
+Returns results to xp_Director. **Workflow control is the responsibility of xp_Director. **
 
 ### `xp_Auditor doc <epic> <issue>`
 
@@ -25,13 +25,13 @@ Checks the document and returns the results to xp_Director. PR issuance is the r
 - Document checking/reporting
 - Reporting of document check results (PR issuance is the responsibility of xp_Director)
 
-**There is no permission to write to files (except for issuing PRs, commenting on issues, and issuing new issues).**
+**No permission to write to files (except for issuing PRs, commenting on issues, and issuing new issues). **
 
 ---
 
 ## ⚠️ Important: Test execution rules
 
-**Do not run test commands (npx jest, pytest, etc.) directly.**
+**Do not run test commands (npx jest, pytest, etc.) directly. **
 
 Test execution must be performed via the following skills:
 
@@ -52,50 +52,67 @@ Test execution must be performed via the following skills:
 
 ### 2. Run xp_RunTestSuites
 
-Load `xp_RunTestSuites` SKILL.md and follow its instructions to run the Unit + Functional test.
+`xp_RunTestSuites` Load SKILL.md and follow its instructions to run the Unit + Functional tests.
 
-Record the full text of the results (standard output/error output).
+Record the full text of the results (standard output/error output). For story issues, this result (`xp_RunTestSuites`
+"### Comprehensive Judgment") is incorporated into the GREEN/RED judgment in Section 3, "Story-level Auditor Phase."
 
 ### 3. E2E Test Judgment/Story-level Auditor Phase
 
 If it is a single task issue, skip E2E (no need to record).
 
-If you receive a story issue (`[Story]` tag in the title or called after AllGREEN from xp_Director), execute the following **Story-level Auditor phase**.
+When a story issue is received (with `[Story]` tag in the title or called after AllGREEN from xp_Director), execute the following **Story-level Auditor phase**.
 
-> **Important (scope limitation)**: The criterion in section 6, “does not affect the test results of the current task,” is Task-level only. It does not apply to, or serve as an exception in, this Story-level phase. Process known REDs outside the task scope according to the ownership decision in this section.
+> **Important (limited scope)**: The judgment criterion of ``It does not affect the test results of the current task'' in Section 6 ``When a bug is discovered in another task scope'' is only for Task-level and cannot be applied or used in this phase (Story-level). Even if the RED is known or has a different task scope, it is processed according to the ownership determination (this section) at Story-level.
+
+> **Important (Unit/Functional total judgment/#2814)**: GREEN/RED judgment in this phase is E2E (section 1.)
+> Not only the result of Unit + Functional executed in Section 2 (``### comprehensive judgment'' of `xp_RunTestSuites`)
+> Include in the judgment target. However, instead of unconditionally reflecting the summation results in the GREEN/RED judgment, the following 2./3.
+> Via ownership judgment: Even if E2E is all PASS, the block object owned by own story is included in the overall judgment in Section 2.> If RED remains, it is not judged as GREEN. On the other hand, all REDs in section 2 are unblocked and owned by other stories.
+> The target case can be GREEN according to the GREEN condition in 2. as well as the E2E side (asymmetric ownership based
+> Blocks <#2807/#2809/#2818> are applied regardless of the test type, so Unit/Functional
+> Do not unconditionally block RED as an exception).
 
 **Story-level Auditor phase (xp_Auditor test \<epic\> \<story\>)**
 
 1. Run E2E tests on parent branch `feature/issue-{story}` (load `xp_RunE2ETests` SKILL.md and follow the steps)
 
-2. For GREEN (only when there are no blocking items owned by this story; this includes all E2E tests passing, or all remaining REDs being non-blocking items owned by other stories): Record `[Auditor GREEN]` in the story issue
+2. In the case of GREEN (condition is that the number of block targets owned by the own story is zero. Both the Unit + Functional comprehensive judgment in section 2 and the E2E result in 1. are applicable — including cases where all PASSes or remaining REDs are non-block targets owned by other stories): Record `[Auditor GREEN]` in the story issue.
 
-**Return GREEN to xp_Director. Calling xp_Reviewer, issuing PR, and closing stories are the responsibility of xp_Director.**
+   **Return GREEN to xp_Director. Calling xp_Reviewer, issuing PR, and closing stories are the responsibility of xp_Director. **
 
-3. For RED: File a bug issue with the contents of the failed E2E test and apply ownership-based asymmetric blocking
-- Before filing, check if there is already an open `bug` issue with the same content (`label:bug` of `search_issues` + keyword)
-- **If an existing issue is found**: Add a duplicate detection comment to the existing issue without publishing a new issue.
-(`workflow/docs/spec/issue-triage.md` 3-section protocol, `<!-- hot-issue-dup -->` marker required).
-Check the parent of an existing issue (`mcp__github__issue_read` method: `get_parent`). GitHub
-A subissue can only have one parent, and the parent is `add` of `mcp__github__sub_issue_write`.
-`replace_parent: true` is required to replace it—if you replace it easily, the original parent story side
-`xp_Director` Tracking is broken, so handle it as follows:
-- **If parent is not set**: Add as a sub-issue of this story. `xp_Director` is
-Unfinished work is detected via sub-issues, so if there is no linkage, bugs will remain unresolved.
-It becomes a loop of the same RED/duplicate detection comment. Because this story acquired ownership:
-  - The story continues (do not close it)
-- **If the parent is this story**: This story already owns the bug, so:
-  - The story continues (do not close it)
-- **If it is already linked to another parent (another story, etc.)**: Do not replace. of another story
-Prioritize not breaking tracking and only record references to duplicate detection comments and stories. If the parent is **another open story**, that story owns the bug, so the current story is **not blocked**; record only the duplicate-detection comment and continue (this resolves the mutual lock in #2807).
-Record the existing issue number as a reference in the story issue
-- **If not found**: File a new bug issue, link it as a sub-issue of this story, and acquire ownership.
-- Include `## Parent branch: feature/issue-{story}` in the body of the bug issue
-- Add the bug issue you filed as a sub-issue to the story
-- Comment the failure details and bug issue number on the story issue
-  - The story continues (does not close)
+3. In the case of RED (if there is RED in either Unit/Functional in Section 2 or E2E in Section 1): File a bug issue with the content of the failed Unit/Functional/E2E test and apply ownership-based asymmetric blocks (The logic of ownership determination does not change depending on the test type. The following branches apply the same regardless of the type)
+   - Before filing a vote, check whether an open `bug` issue with the same content already exists (`label:bug` + keyword of `search_issues`)
+   - **If an existing issue is found**: Add a duplicate detection comment to the existing issue without publishing a new issue.
+     (`workflow/docs/spec/issue-triage.md` Section 3 protocol, `<!-- hot-issue-dup -->` marker required).
+     Check the parent of an existing issue (`mcp__github__issue_read` method: `get_parent`). GitHub
+     A sub-issue can only have one parent, and the parent is `add` of `mcp__github__sub_issue_write`.
+     Replacement requires `replace_parent: true`—If you replace it easily, the original parent story side
+     `xp_Director` Since tracking is broken, handle it as follows:
+     - **If parent is not set**: Add as a sub-issue of this story. `xp_Director` is
+       Unfinished work is detected via sub-issues, so if there is no linkage, bugs will remain unresolved.
+       It ends up being a loop of the same RED/duplicate detection comments. Because ownership has been acquired
+       - Story continues (does not close)
+     - **If the parent is your own story**: Because your own story already has ownership
+       - Story continues (does not close)
+     - **If it is already linked to another parent (another story, etc.)**: The state of the parent story (`state`)
+       Check (`mcp__github__issue_read` method: `get`, or `gh issue view <親番号> --json state`)
+       - **If the parent is another open story**: Do not replace. Track another story
+         Prioritize not breaking anything, and only record references to duplicate detection comments and stories.**Do not block the current story** as the bug is owned by that story.
+         (Record only the duplicate detection comment and proceed. #2807 mutual lock resolved)
+       - **If the parent is already a closed story**: The person who actually fixes the bug
+         (Open story) no longer exists, so treat it as if it were unparented.
+         Specify `replace_parent: true` to change the parent to the current story and reacquire ownership.
+         Comment on the issue that it has been replaced (#2818)
+         - Story continues (does not close)
+     Record the existing issue number as a reference in the story issue
+   - **If not found**: File a new bug issue. Link it as a sub-issue of your own story and take ownership
+     - Include `## 親ブランチ: feature/issue-{story}` in the body of the bug issue
+     - Add the bug issue you filed as a sub-issue to the story
+     - Comment the failure details and bug issue number on the story issue
+     - Story continues (does not close)
 
-4. If E2E cannot be executed: Record the `[E2E skip]` comment and leave the decision to the user (do not close automatically)
+4. If E2E cannot be executed: `[E2E スキップ]` Record the comment and leave the decision to the user (do not close automatically)
 
 ### 4. Analyze the results
 
@@ -121,84 +138,89 @@ For each FAIL test, determine:
 
 ### 5. Real environment confirmation of Bug fix task (Bug task only)
 
-If the task issue is a bug fix task (parent is issue `[Bug]`),
+If the task issue is a bug fix task (parent is the `[Bug]` issue),
 In addition to the test GREEN, the following actual environment confirmation will be conducted.
 
 1. Read the bug issue text/reproduction test and understand the reproduction steps
 2. Run the reproduction steps without mocks and make sure the error does not occur
 3. Comment the confirmation results on the issue:
 
-**If confirmed (confirm bug fix):**
+   **If confirmed (confirm bug fix):**
    ```
-[Actual environment confirmation OK]
-Perform steps to reproduce: No errors (confirm bug fixed)
-   ```
-
-**If it is not possible to check the actual environment (environment dependent, network unavailable, external service dependent, etc.):**
-   ```
-[Skip actual environment confirmation]
-Reason: <Reason for unconfirmation>
-Leave the decision up to the user.
+   [実環境確認 OK]
+   再現手順を実行: エラーなし（バグが修正されていることを確認）
    ```
 
-> **Note**: If the actual environment check is skipped, `[Auditor GREEN]` will not be recorded automatically.
+   **If it is not possible to check the actual environment (environment dependent, network unavailable, external service dependent, etc.):**
+   ```
+   [実環境確認 スキップ]
+   理由: <確認不可の理由>
+   判断をユーザーに委ねます。
+   ```
+
+> **Note**: If the actual environment check is skipped, `[Auditor GREEN]` is not automatically recorded.
 > Record GREEN after receiving user judgment comments.
 
 ---
 
 ### 6. When a bug is found in another task scope: Issue a bug issue
 
+> **This section is only for Task-level (`xp_Auditor test <epic> <task_issue>`). Does not apply to the Story-level Auditor phase in section 3. **
+
 If the error is determined to be outside the scope of the current task (problem with another task or function),
-First, check if an open `bug` issue with the same content already exists (`label:bug` of `search_issues` + keyword).
+First, check if an open `bug` issue with the same content already exists (`label:bug` + keyword of `search_issues`).
 
 **If an existing issue is found**: Add a duplicate detection comment to the existing issue without publishing a new issue.
 (`workflow/docs/spec/issue-triage.md` 3-section protocol, `<!-- hot-issue-dup -->` marker required):
 
 ```bash
-gh issue comment <existing issue number> \
---body "## Duplicate detection ($(date +%Y-%m-%d))
+gh issue comment <既存イシュー番号> \
+  --body "## 重複検知 ($(date +%Y-%m-%d))
 <!-- hot-issue-dup -->
-Detected by: xp_Auditor (task #<current task issue number>)
-The same failure was detected again. "
-```
+検知元: xp_Auditor（タスク #<現在のタスクイシュー番号>）
+同内容の失敗を再検知しました。"
+```If `gh` cannot be used (such as ClaudeCodeWeb), fall back to `mcp__github__add_issue_comment` (owner, repo, issue_number: `<既存イシュー番号>`, body: same content as above).
 
 Also recorded in current issue:
 ```
-[Bug issue duplicate detection #<existing issue number>]
-Detected a bug in another task scope. Added duplicate detection comment to existing issue #<number>.
-It does not affect the test results of the current task.
+[Bug イシュー重複検知 #<既存イシュー番号>]
+別タスクスコープのバグを検出。既存イシュー #<番号> に重複検知コメントを追加済み。
+現タスクのテスト結果には影響しない。
 ```
 
 **If not found**: File a new bug issue:
 
 ```bash
 gh issue create \
---title "[Bug] <Bug summary>" \
---body "## How it was discovered
-Found during Auditor check of task #<current task issue number>.
+  --title "[Bug] <バグの概要>" \
+  --body "## 発見経緯
+タスク #<現在のタスクイシュー番号> の Auditor チェック中に発見。
 
-## Error details
-<Error message/reproduction conditions>
+## エラー内容
+<エラーメッセージ・再現条件>
 
-## Scope of influence
-<Which task/function is it related to?>
+## 影響範囲
+<どのタスク・機能に関係するか>
 
-## Related issues
-#<Current task issue number>
+## 関連イシュー
+#<現在のタスクイシュー番号>
 
-## Parent story
-#<Parent story issue number>
+## 親ストーリー
+#<親ストーリーイシュー番号>
 
-## Parent branch
-feature/issue-<parent story issue number>" \
---label "bug,epic/<epic name>"
+## 親ブランチ
+feature/issue-<親ストーリーイシュー番号>" \
+  --label "bug,epic/<epic名>"
 ```
+
+If `gh` cannot be used (such as ClaudeCodeWeb), use `mcp__github__issue_write` (owner, repo, method: `create`, title,
+body, labels: [`bug`, `epic/<epic名>`]).
 
 After publication, also record in the current issue:
 ```
-[Bug issue published #<number>]
-Detected a bug in another task scope. Registered as new issue #<number>.
-It does not affect the test results of the current task.
+[Bug イシュー発行済み #<番号>]
+別タスクスコープのバグを検出。新規イシュー #<番号> として登録済み。
+現タスクのテスト結果には影響しない。
 ```
 
 ### 7. Record the result as a stage comment in the issue
@@ -206,21 +228,21 @@ It does not affect the test results of the current task.
 For GREEN:
 ```
 [Auditor GREEN]
-PASS: n / Test command: `<command>`
+PASS: n件 / テストコマンド: `<コマンド>`
 ```
 
 For RED (same task scope):
 ```
 [Auditor RED]
-FAIL: n results
+FAIL: n件
 
-### FAIL analysis
+### FAIL 分析
 
-**[Test name]**
-- Error: `<Error message excerpt>`
-- Scope: within the same task
-- Judgment: Test design issues / implementation issues / undecidable
-- Basis: <Why did you make that decision>
+**[テスト名]**
+- エラー: `<エラーメッセージ抜粋>`
+- スコープ: 同一タスク内
+- 判断: テスト設計の問題 / 実装の問題 / 判断不能
+- 根拠: <なぜそう判断したか>
 ```
 
 ### 8. Completion report to parent issue upon completion of sub-issue
@@ -228,10 +250,11 @@ FAIL: n results
 After recording [Auditor GREEN] in a sub-issue, make a completion report comment to the parent issue:
 
 ```
-Subissue #<number> completed. Remaining: #<number>, #<number>
+サブイシュー #<番号> 完了。残り: #<番号>, #<番号>
 ```
 
-GREEN After confirmation, write a completion comment to the parent issue (`gh issue comment <parent issue number>`).
+GREEN After checking, write a completed comment to the parent issue (`gh issue comment <親イシュー番号>`. If `gh` cannot be used,
+Fallback to `mcp__github__add_issue_comment` (owner, repo, issue_number: `<親イシュー番号>`, body: completion report content)).
 If all subissues are completed, xp_Director calls `xp_Auditor test <epic> <story>` (Story-level Auditor phase).
 
 ### 9. Return results to xp_Director
@@ -247,7 +270,7 @@ If all subissues are completed, xp_Director calls `xp_Auditor test <epic> <story
 ### 1. Check the products below in docs/
 
 - Index integrity of `README.md` in spec directory
-- The spec directory resolves with the same priority as `xp_doc_spec`: 1 (preferred) `api/<EpicName>/docs/spec/` if it exists, 2 (fallback) `<EpicName>/docs/spec/`
+  - The spec directory resolves with the same priority as `xp_doc_spec`: 1 (preferred) `api/<EpicName>/docs/spec/` if it exists, 2 (fallback) `<EpicName>/docs/spec/`
 - Is the content of each document too thin?
 
 ### 2. Check the existence and freshness of issue2md log
@@ -255,23 +278,54 @@ If all subissues are completed, xp_Director calls `xp_Auditor test <epic> <story
 `xp_issue2md` should have been executed in step 1 of `xp_Documenter`, but it may be missing or obsolete, so verify it.
 
 1. Derive the target path from the target issue number and epic name (same determination method as `xp_issue2md`):
-- Determine epic name from label `epic/<EpicName>`
-- If not, refer to issue title or parent issue label
-- Target path: `<EpicName>/docs/issues/issue-<issue_number>.MD`
+   - Determine epic name from label `epic/<EpicName>`
+   - If not, refer to issue title or parent issue label
+   - Target path: `<EpicName>/docs/issues/issue-<issue_number>.MD`
 2. Check if the file exists → If it does not exist, **missing (NG)**
 3. If it exists, compare the number of comments and the date and time of the last comment in the file with the actual number of comments and the date and time of the latest comment on the GitHub issue → If they do not match, **obsolete (NG)**
 4. If they match, **OK**
 
+### 2.5. Consistency check between PR Summary and actual change range (git diff --stat)In the past, even though the summary of the PR body stated "only added 2 files", the actual merge commit was
+There was an accident where the content was to delete the entire repository 8385 files (PR #2426, emergency revert PR #2428, #2625).
+They are merged after the judgment of `[Auditor doc OK]` → `[Auditor GREEN]`, and the number of files and lines are different from the explanation in the main text.
+Even if there was a large deviation, it could not be detected. doc mode detects this discrepancy using the following steps.
+
+1. Resolve the base to be compared as follows (**Leave the branch name that does not necessarily exist locally as is)
+   Do not pass to `git diff`**. `git fetch origin feature/issue-{親番号}` is performed in task preprocessing, but
+   (Always use a remote tracking branch with `origin/` as a local branch with the same name will not be created):
+   - Task PR (if parent branch exists): `git fetch origin feature/issue-{親番号}` completed
+     Set `origin/feature/issue-{親番号}` as base
+   - PR for main of root task (if there is no parent branch): base on `origin/main`
+   - Story-level AllGREEN flow (when `xp_Auditor doc <epic> <story>` is called in a solo run):
+     In this run, `feature/issue-{親番号}`, which is the PR head, is checked out.
+     (xp_Director creates a PR as `--head feature/issue-{親番号}` in a separate run).
+     Do not compare the current session branch as is, `git fetch origin feature/issue-{親番号}`
+     Explicitly target `origin/feature/issue-{親番号}` obtained in , and set base to `origin/main`
+2. Execute `git diff --stat <base>` to get the number of changed files and number of added/deleted lines (set the second argument (comparison target) to
+   Omit it and compare the base commit with the **working tree**. `xp_Implementer`・`xp_Documenter` are at this point
+   Commit-to-commit comparisons such as `<base>...HEAD` only include uncommitted
+   Missing changes that this check should detect, such as mass deletions. Story-level AllGREEN flow targets
+   If `origin/feature/issue-{親番号}`, compare its tip commit with the working tree
+   (Equivalent to `git diff --stat origin/feature/issue-{親番号}`. If the working tree is unchecked out,
+   fall back to `git diff --stat origin/main origin/feature/issue-{親番号}` inter-commit comparison)
+3. `## 概要` and past stage comments (`[Tester完了]` `[Implementer完了]`, etc.) in the issue text
+   Compare with the described expected change range (target files/change details)
+4. If the discrepancy is large (e.g., adding or deleting a large number of files that are not explained in the explanation, changing to a directory outside the target range,
+   Changes to the entire repository size, etc.) should be marked as **NG** and should be confirmed without issuing `[Auditor doc OK]`.
+   Return to xp_Director
+5. If there is no discrepancy or it is minor, click **OK** and proceed to the next step.
+
 ### 3. Comment the check results on the issue
 
 ```
-[Checking Auditor document]
+[Auditor ドキュメントチェック中]
 
-### Document check results
-- spec/README.md: <OK/NG: Reason>
-- spec/<area>.md: <OK/NG: Reason>
-- reference/: <OK / NG: Reason>
-- issue2md log: <OK / NG: Missing / NG: Obsolete (n items on GitHub / m items on log)>
+### ドキュメントチェック結果
+- spec/README.md: <OK / NG: 理由>
+- spec/<領域>.md: <OK / NG: 理由>
+- reference/: <OK / NG: 理由>
+- issue2mdログ: <OK / NG: 欠落 / NG: 陳腐化（GitHub上 n件 / ログ上 m件）>
+- diffスコープ整合性: <OK / NG: 理由（git diff --stat件数 vs 想定範囲）>
 ```
 
 ### 4. If OK: return OK to xp_Director
@@ -280,19 +334,26 @@ PR issuance is the responsibility of xp_Director.
 Return only results:
 ```
 [Auditor doc OK]
-xp_Director issues a PR.
+xp_Director がPRを発行します。
 ```
 
-### 5. Return results to xp_Director
-
-- OK: Record `[Auditor doc OK]` and return to Director. PR issuance is the responsibility of the Director
+### 5. Return results to xp_Director- OK: Record `[Auditor doc OK]` and return to Director. PR issuance is the responsibility of the Director
 - NG (spec/reference, etc.): Return with problems
-- NG (missing/obsolete issue2md log): Return as "issue2md log NG" with a clear statement that **re-execution of `xp_issue2md <issue_number>` by xp_Documenter** is required.
+- NG (missing/obsolete issue2md log): Return as "issue2md log NG" with a clear statement that `xp_issue2md <issue_number>` must be re-executed by xp_Documenter**
   ```
-[Auditor doc NG: issue2md log]
-Target: <EpicName>/docs/issues/issue-<issue_number>.MD
-Reason: Missing / Obsolete (n on GitHub / m on log)
-xp_Director should send issue2md back to xp_Documenter.
+  [Auditor doc NG: issue2mdログ]
+  対象: <EpicName>/docs/issues/issue-<issue_number>.MD
+  理由: 欠落 / 陳腐化（GitHub上 n件 / ログ上 m件）
+  xp_Director は xp_Documenter に issue2md の再実行を差し戻してください。
+  ```
+- NG (diff scope inconsistency): ``diff scope inconsistency'' indicates that the actual scope of change is different from the issue's assumption.
+  Specify and return that there is a large deviation (`[Auditor doc OK]` is not issued)
+  ```
+  [Auditor doc NG: diffスコープ不整合]
+  git diff --stat <base>...HEAD: <n>ファイル変更（+X/-Y行）
+  イシュー記載の想定範囲: <要約>
+  乖離: <詳細（例: 想定外の一括削除・想定外ディレクトリへの変更 等）>
+  xp_Director はユーザーに確認を仰ぐか、実装を差し戻してください。
   ```
 
 ---

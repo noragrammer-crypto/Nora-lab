@@ -52,6 +52,9 @@ if [ ! -d "$SNAPSHOT_DIR" ]; then
   exit 1
 fi
 
+# 公開用の一時cloneへ移動した後もコピー元を参照できるよう、相対パスは先に絶対パスへ解決する。
+SNAPSHOT_DIR="$(cd "$SNAPSHOT_DIR" && pwd -P)"
+
 # スナップショットディレクトリはgitリポジトリ配下にあることを要求する。
 # 単純に `cp -r` で物理コピーすると、HolyAutomater本体側の .gitignore（例: `.env`）で
 # 除外されているだけで実体としては存在するファイルまで、独立したclone先では除外ルールの
@@ -63,15 +66,19 @@ if ! git -C "$SNAPSHOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; the
 fi
 
 PRIVATE_REPO_ROOT="$(git -C "$SNAPSHOT_DIR" rev-parse --show-toplevel)"
+SNAPSHOT_SUBTREE_DIR="${SNAPSHOT_DIR#"$PRIVATE_REPO_ROOT"/}"
 
 # 直近の `git subtree pull/add --squash` が記録した「private側が最後に取り込んだ公開側コミットSHA」を
 # private側のコミット履歴（`git-subtree-split: <sha>` トレーラー）から取得する。
 # 公開側でこの時点より進んだ変更（オーナーによる直接push・PR等）があるのに気づかず publish すると、
 # その変更を削除・巻き戻す形のPRを作ってしまう（PR #2762 Codexレビュー指摘）。これを検知する基準値として使う。
 LAST_KNOWN_PUBLIC_SHA="$(
-  git -C "$PRIVATE_REPO_ROOT" log --format='%B' -- "$SNAPSHOT_DIR" 2>/dev/null \
-    | grep -m1 -oE 'git-subtree-split: [0-9a-f]{40}' \
-    | awk '{print $2}' || true
+  git -C "$PRIVATE_REPO_ROOT" log --format='%B%n__COMMIT_END__' 2>/dev/null \
+    | awk -v subtree_dir="$SNAPSHOT_SUBTREE_DIR" '
+        $0 == "git-subtree-dir: " subtree_dir { in_nora_lab_subtree = 1 }
+        in_nora_lab_subtree && /^git-subtree-split: / { print $2; exit }
+        /^__COMMIT_END__$/ { in_nora_lab_subtree = 0 }
+      ' || true
 )"
 
 WORKDIR="$(mktemp -d)"

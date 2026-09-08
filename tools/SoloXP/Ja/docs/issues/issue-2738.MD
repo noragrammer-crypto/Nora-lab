@@ -1,0 +1,282 @@
+---
+issue: 2738
+title: "[Bug] pre-push.sh: 非Termuxでもsymlink不可な環境でスキル消失／同期対象外のstaged変更を巻き込む可能性（#2640 Codexレビュー指摘）"
+state: closed
+labels: [bug, epic/SoloXP, PriorityHigh]
+author: noragrammer-crypto
+created_at: 2026-08-07T00:49:44Z
+epic: SoloXP
+---
+
+# #2738 [Bug] pre-push.sh: 非Termuxでもsymlink不可な環境でスキル消失／同期対象外のstaged変更を巻き込む可能性（#2640 Codexレビュー指摘）
+
+## 本文
+
+## 発見経緯
+
+#2640（`.claude/skills/` 側の同期方式見直し）のPR #2732 に対し、マージ後に Codex 自動レビューから2件の妥当な指摘が投稿された。マージがレビュー投稿より先行したため未反映（#2724・#2723 と同種の事故）。
+
+## 指摘1（P1）: symlink作成可否をTermux判定だけで決めている
+
+`.claude/hooks/pre-push.sh` の `is_termux()` が false（≒非Termux）の場合、symlink安定環境と決め打ってsymlink分岐に入る。しかし「非Termux＝symlink可能」とは限らない（例: symlink作成権限のないWindowsチェックアウト）。symlink分岐は既存スキルを `rm -rf` した後に `ln -s` するため、symlink作成自体が失敗すると停止もフォールバックもせず、スキルディレクトリが消失した状態でステージ・コミットされ得る。
+
+functional testはデフォルトLinuxと`PRE_PUSH_FORCE_TERMUX=1`のみをカバーしており、「非Termuxだがsymlink不可」のケースが未カバーだった。
+
+## 指摘2（P2）: 同期対象外のstaged変更を丸ごとコミットしてしまう
+
+`.claude/skills`・`dotfiles/.claude/skills` のドリフト修正時、無条件の `git commit`（pathspec無し）がstaged内容を丸ごとコミットしてしまう。pre-push実行時点で他の無関係なWIP変更が既にstageされていた場合、それが同期コミットに静かに混入する。
+
+## 修正方針（ローカルで実装・テスト済み、検証済みの差分あり）
+
+以下の方針で修正し、実際に `SoloXP/tests/unit`・`SoloXP/tests/functional` 双方で検証済み（回帰なし、追加テストGREEN）。次回このイシューを処理する際にそのまま実装として使える。
+
+### 1. symlink可否の実プローブ化 + per-item フォールバック
+
+```bash
+can_create_symlinks() {
+  local probe_dir probe_link
+  probe_dir="$(mktemp -d "$REPO_ROOT/.pre-push-symlink-probe.XXXXXX" 2>/dev/null)" || return 1
+  probe_link="$probe_dir/link"
+  if ln -s "target" "$probe_link" 2>/dev/null && [ -L "$probe_link" ]; then
+    rm -rf "$probe_dir"
+    return 0
+  fi
+  rm -rf "$probe_dir"
+  return 1
+}
+```
+
+モード判定を `is_termux || ! can_create_symlinks` に変更（Termux判定 or 実プローブ失敗のいずれでもコピーモードへ）。さらに個々の `ln -s` 呼び出し自体にもフォールバックを追加:
+
+```bash
+rm -rf "$link"
+if ! ln -s "$rel_target" "$link" 2>/dev/null; then
+  cp -r "$src" "$link"
+fi
+```
+
+### 2. 同期対象外のstaged変更がある場合は自動コミットしない
+
+pathspec指定の `git commit -- <paths>` も検討したが、ディレクトリ→symlinkの型変更を含むパスでは一部の変更を取りこぼす回帰があることを実機検証で確認した（採用しない）。代わりに「無関係なstaged変更が既にある場合はコミット自体をスキップする」方式を採用:
+
+```bash
+sync_paths=("$DOTFILES_SKILLS")
+[ -d "$CLAUDE_SKILLS" ] && sync_paths+=("$CLAUDE_SKILLS")
+
+pre_existing_staged="$(git diff --cached --name-only)"
+
+git add "${sync_paths[@]}"
+if git diff --cached --quiet; then
+  exit 0
+fi
+
+if [ -n "$pre_existing_staged" ]; then
+  echo "⚠️ 同期対象外にstaged変更が既にあるため、pre-pushフックによる自動コミットをスキップします。"
+  echo "   同期内容は git add 済みです。無関係な変更と分けて手動でコミットしてください。"
+  exit 0
+fi
+
+git commit -m "chore: dotfiles/.claude/skills・.claude/skills を正本（SoloXP/workflow）に同期（ドリフト修正）"
+```
+
+同期内容は `git add` 済みのまま残るため失われない（次のコミットで一緒に、または手動で分けてコミットできる）。
+
+## 追加テスト（実装済み・GREEN確認済み）
+
+- Unit: 命題7〜9（プローブ関数の存在、per-itemフォールバックの記載、staged変更ガードの記載）
+- Functional:
+  - 「非Termuxだが実際にsymlinkを作成できない環境」（fake `ln` が常に失敗）でスキルが消失せず実体コピーとして残ることを検証
+  - 「同期対象外に既にstaged変更がある場合」でコミットがスキップされ、同期内容・無関係な変更の両方がstagedのまま残ることを検証
+
+## 影響範囲
+
+- `.claude/hooks/pre-push.sh`（#2640で追加された `.claude/skills/` 同期処理）
+
+## 関連イシュー
+
+- #2640（本バグの原因コミットを含む、クローズ済み）
+- PR #2732（マージ済み、Codexレビューコメントは未反映のまま）
+
+## 親ブランチ
+
+なし（`feature/issue-2168` は既にAllGREEN目前のため、本バグは新規タスクとして通常のバグ修正フロー（`xp_Director`）で処理する）
+
+## コメント
+
+### noragrammer-crypto — 2026-08-15T03:14:40Z
+
+## 既存実装との競合チェック（手動トレース・code-architectサブエージェント未提供のためフォールバック）
+
+フォールバック発動: あり
+発動理由: `subagent_type: code-architect` が本セッションでは "Agent type 'code-architect' not found" で利用不可（Available agents: claude, claude-code-guide, Explore, general-purpose, Plan, statusline-setup）。手動で `.claude/hooks/pre-push.sh` 全文と関連テスト4件（`SoloXP/tests/unit/issue-2639-*`, `issue-2724-*`, `SoloXP/tests/functional/issue-2639-*`, `issue-2724-*`）をReadしてトレースした。
+
+対象: #2738
+
+**Patterns & Conventions Found:**
+- `is_termux()` はモード分岐の唯一の判定関数として `PRE_PUSH_FORCE_TERMUX=1` でテスト側から強制切替可能（`SoloXP/tests/functional/issue-2724-*.functional.test.js` で実例あり）。イシュー提案の `can_create_symlinks()` も同じ関数分割スタイルの延長。
+- `any_changed` フラグで変更有無を集約し、末尾で `git add -A` → `git diff --cached --quiet` 判定 → `git commit` の順。イシュー提案2（staged変更保護）は、この既存の `git add -A` 直前に `pre_existing_staged` を退避するだけで既存フローに素直に挿入できる。
+- 既存Functional testは一時gitサンドボックス（`fs.mkdtempSync` + `git init`）を作り `execFileSync('bash', [...])` でフック本体を実行するスタイル。新規テストもこの型に揃えられる。
+- `.claude/skills/` 側のsymlink処理は既に「symlink作成 → per-item判定」のループ構造を持っており、`ln -s` 失敗時の `cp -r` フォールバックはこのループ内に自然に追加できる。
+
+**Architecture Decision:**
+新しい抽象・レイヤーは不要。既存の関数分割（判定関数 + `any_changed` 集約 + 末尾コミット）の延長線上でイシュー提案の2修正を実装する。
+
+**競合の有無:** なし（イシュー本文の修正方針はそのまま採用可能）
+
+**テスト方針（新規ファイル、既存命名規則 `issue-<番号>-<説明>.unit/functional.test.js` に準拠）:**
+- Unit: `SoloXP/tests/unit/issue-2738-pre-push-hook-symlink-fallback.unit.test.js`（`can_create_symlinks` 関数定義・`is_termux || ! can_create_symlinks` 判定・per-item `cp -r` フォールバック・staged変更ガードの記載を静的チェック）
+- Functional: `SoloXP/tests/functional/issue-2738-pre-push-hook-symlink-fallback.functional.test.js`（fake `ln` をPATH注入した非Termux環境でスキルが消失せず実体コピーになることを検証／pre-existing staged変更がある場合に自動コミットがスキップされ両方の変更がstagedのまま残ることを検証）
+
+再現テスト・修正実装は CLAUDE.md の TDD原則（バグ修正はワンタスクで完結、再現テストを独立タスクに分離しない）に従い単一タスク・単一PRとする。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T03:15:14Z
+
+作業開始 2026-08-15 03:20 JST
+セッションURL: https://claude.ai/code/session_011JBQUJNN5qGYfhHe2VKhzu
+[ProjectStatus: InProgress]
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T03:15:18Z
+
+[親ブランチ作成済み] feature/issue-2738
+
+## 実行計画
+
+イシュー種別: Bug
+ストーリーイシュー: #2738
+サブイシュー（全1件、CLAUDE.md TDD原則により再現テスト＋修正実装を単一タスクに統合）:
+  - #2936 [Task] pre-push.sh: symlink不可環境フォールバック + 無関係staged変更保護 (2pt) depends_on: なし
+
+即着手可能（depends_onなし）:
+  - #2936
+
+次回のセッションで /xp_Director 2936 を実行してください。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T03:26:34Z
+
+サブイシュー #2936 完了。残り: なし（全1サブイシューが完了）。
+PR #2937（`--base feature/issue-2738`）発行済み。マージ後、次回 `/ProcessIssue` 実行時にAllGREEN判定（Story-level Auditor → Reviewer → main向けPR）に進みます。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T04:04:05Z
+
+[Auditor テスト実行中]（Story-level）
+
+## /xp_RunE2ETests 結果
+
+実行日時: 2026-08-15 04:03 JST
+対象ブランチ: feature/issue-2738（サブタスク #2936 マージ済み、PR #2937）
+対象: #2738
+
+### 結果
+- Test Suites: 14 passed, 14 total
+- Tests: 190 passed, 1 skipped（既存の無関係skip）, 191 total
+
+### 受け入れ判定
+✅ 全件 PASS（ブロック対象ゼロ件）: Story完了・PR作成可能
+
+---
+[Auditor GREEN]
+PASS: 190件（E2E, 14 suites）/ テストコマンド: `npm run test:e2e`（SoloXP/）
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T04:09:21Z
+
+## xp_Reviewer レポート
+
+対象: `feature/issue-2738` ブランチの `main` に対する全差分（`code-reviewer` サブエージェント）
+
+### 高リスク指摘（High Risk）
+なし
+
+### 中程度・低リスク指摘
+
+**1. 個々の `ln -s` フォールバックが `can_create_symlinks()` と異なり、リンク作成の実結果（`[ -L ]`）を検証していない（confidence 80）**
+
+`can_create_symlinks()` は意図的に終了コードだけでなく `[ -L "$probe_link" ]` も見ている（MSYS/Git for Windows の `ln` が権限不足時に exit 0 のまま実体ファイル/コピーを作ってしまう既知の挙動——まさにこのIssueが動機として挙げているWindowsチェックアウトのケース——を拾うため）。しかし新規追加した個別フォールバック（`.claude/skills/` のsymlinkループ内）は終了コードのみで判定しており、同じ「execは成功するが実体はsymlinkでない」失敗モードを個別パスで踏んだ場合にフォールバックが発動せず、壊れた非symlinkエントリがそのまま `git add -A` でコミットされうる。
+提案: `if ! { ln -s "$rel_target" "$link" 2>/dev/null && [ -L "$link" ]; }; then rm -rf "$link"; cp -r "$src" "$link"; fi` のように `can_create_symlinks()` と同じ判定を再利用する。
+
+**2. 新規Functional testが個別フォールバックの経路を一度も通していない（confidence 80）**
+
+新規Functional testはfake `ln`を常に失敗させるため、`can_create_symlinks()`（全体プローブ）自体が失敗し、フックは実体コピー分岐（symlinkループに入らない）を通る。個別フォールバック（symlinkループ内の新規コード）は未カバー。Unit testも正規表現の近接マッチのみで、上記1の欠陥があっても検知できない。同スイート内の `pr-2746-codex-review-fixes.functional.test.js` に前例がある「特定パスだけ失敗させる」注入方式（`chmod 000` 等）で、「全体プローブは通るが特定の `ln -s` だけ失敗する」シナリオの専用テストを追加するのが望ましい。
+
+### 総評
+
+主眼のバグ（`rm -rf` 成功後 `ln -s` が失敗してスキルが消失する）とstaged変更保護は正しく修正されている。`mktemp -d`/`rm -rf` の扱いも安全（`mktemp` 失敗時は空文字列への `rm -rf` に到達しない）。上記2件は個別フォールバックという保険機構自体の頑健性に関する指摘であり、主要な不具合修正の正しさには影響しない（Medium Risk）。ユーザーアクション不要、現状維持で問題ない。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T04:09:36Z
+
+[Auditor ドキュメントチェック中]（Story-level）
+
+### ドキュメントチェック結果
+- spec/README.md: OK（`docs/skill-files-sync.md` エントリ、内容更新済み）
+- docs/skill-files-sync.md: OK（symlink実プローブ・staged変更保護の2セクション追加済み、サブタスク#2936のAuditor doc OKで確認済み）
+- reference/: OK（対象外、変更なし）
+- issue2mdログ: **NG: 欠落**（`SoloXP/docs/issues/issue-2738.MD` が存在しない。サブタスク#2936分は作成済みだが、親Story本体 #2738 のログが未作成）
+
+---
+[Auditor doc NG: issue2mdログ]
+対象: `SoloXP/docs/issues/issue-2738.MD`
+理由: 欠落
+xp_Director は xp_Documenter（`xp_issue2md 2738`）の実行が必要です。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T04:10:45Z
+
+[Auditor ドキュメントチェック中]（Story-level・再チェック）
+
+### ドキュメントチェック結果
+- spec/README.md: OK
+- docs/skill-files-sync.md: OK
+- reference/: OK（対象外）
+- issue2mdログ: OK（`SoloXP/docs/issues/issue-2738.MD` 作成済み、コメント7件でGitHub側と一致）
+
+---
+[Auditor doc OK]
+xp_Director がPRを発行します。
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
+
+### noragrammer-crypto — 2026-08-15T04:11:31Z
+
+[親ブランチ PR 発行済み] #2938
+作業完了 2026-08-15 04:11 JST / 所要時間: 56分（03:15作業開始〜04:11 PR発行）
+
+---
+_Generated by [Claude Code](https://claude.ai/code)_
+
+---
