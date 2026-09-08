@@ -54,7 +54,9 @@ specディレクトリの `README.md` の索引を更新する。
 
 `README.md` の「関連イシュー」表に記載された各イシュー番号について、実際の Issue 状態（open/closed）を取得し、表の状態列を最新化する。
 
-- `gh issue view <番号> --json state` または MCP `mcp__github__issue_read`（method: `get`）で現状態を取得する
+- `gh issue view <番号> --json state` で現状態を取得する。`gh` が使えない場合（ClaudeCodeWeb等）は
+  `mcp__github__issue_read`（method: `get`）にフォールバックする（`xp_issue2md`〈#3204〉で確立した
+  パターン。#3217）
 - 表の状態列が実態とズレている行（クローズ済みなのに `open` のまま等）を修正する
 - README が陳腐化したまま放置されることを防ぐための必須ステップ
 

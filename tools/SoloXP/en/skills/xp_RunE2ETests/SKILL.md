@@ -37,7 +37,10 @@ Start the local server manually if it is not started:
 
 ```bash
 # Start local server (mimics Vercel routing)
-node /home/user/HolyAutomater/scripts/dev-server.js > /tmp/dev-server.log 2>&1 &
+# The startup command can be overridden with the DEV_SERVER_CMD environment variable.
+# Defaults to npx vercel dev --listen 3000 (project-agnostic).
+DEV_SERVER_CMD="${DEV_SERVER_CMD:-npx vercel dev --listen 3000}"
+eval "$DEV_SERVER_CMD" > /tmp/dev-server.log 2>&1 &
 
 # Confirm communication
 curl -s -o /dev/null -w "%{http_code}" http://localhost:3000
@@ -95,8 +98,23 @@ if [ "$STATUS" = "200" ]; then
 echo "Local server OK: $BASE_URL"
 else
 echo "Local server not started. Start it and retry."
-  node /home/user/HolyAutomater/scripts/dev-server.js > /tmp/dev-server.log 2>&1 &
-  sleep 3
+  # The startup command can be overridden with the DEV_SERVER_CMD environment variable.
+  # Defaults to npx vercel dev --listen 3000 (project-agnostic).
+  DEV_SERVER_CMD="${DEV_SERVER_CMD:-npx vercel dev --listen 3000}"
+  eval "$DEV_SERVER_CMD" > /tmp/dev-server.log 2>&1 &
+
+  # Wait for startup (up to 30 seconds, polling every 1 second). npx vercel dev may
+  # fetch packages on a cold install, so poll for connectivity instead of a fixed sleep.
+  for i in $(seq 1 30); do
+    STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+    [ "$STATUS" = "200" ] && break
+    sleep 1
+  done
+  if [ "$STATUS" != "200" ]; then
+    echo "Failed to start the local server (no response after 30 seconds). Log:"
+    cat /tmp/dev-server.log
+    exit 1
+  fi
   BASE_URL="http://localhost:3000"
 fi
 ```

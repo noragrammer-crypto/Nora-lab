@@ -1,7 +1,7 @@
 ---
 issue: 269
 title: "[Task] xp_review_workflow にワークフロー期待値・逸脱検知を追加する"
-state: open
+state: closed
 labels: [task, epic/SoloXP]
 author: noragrammer-crypto
 created_at: 2026-03-18T08:38:54Z
@@ -121,5 +121,50 @@ PASS: 11件 / テストコマンド: `node SoloXP/tests/e2e/issue-254-workflow-u
 ### noragrammer-crypto — 2026-03-18T08:53:00Z
 
 [Documenter実行中]
+
+---
+
+### noragrammer-crypto — 2026-03-18T08:55:24Z
+
+## ドキュメント生成完了
+
+生成・更新したファイル:
+- `SoloXP/docs/issues/issue-269.MD`: イシュー作業ログ
+- `SoloXP/docs/spec/xp_review_workflow.md`: 新規仕様書（期待達成条件・逸脱検知・原因SKILL特定）
+- `SoloXP/docs/spec/README.md`: 索引に xp_review_workflow を追加
+- `SoloXP/docs/tests/E2ETests/issue-254-workflow-update.md`: E2Eテスト仕様書
+
+スキップ:
+- xp_doc_reference: api/SoloXP/ コードなし（対象なし）
+- xp_doc_UnitTests: Unit テストなし
+- xp_doc_FunctionTests: Functional テストなし
+
+[Documenter完了]
+
+---
+
+### noragrammer-crypto — 2026-03-18T08:55:28Z
+
+[Auditor ドキュメントチェック中]
+
+---
+
+### noragrammer-crypto — 2026-03-18T08:56:19Z
+
+[Auditor ドキュメントチェック中]
+
+### ドキュメントチェック結果
+- spec/README.md: ✅ OK — xp_review_workflow エントリが正しく追加されている
+- spec/xp_review_workflow.md: ✅ OK — 期待達成条件・逸脱検知・原因SKILL特定・報告フォーマットを網羅
+- docs/tests/E2ETests/issue-254-workflow-update.md: ✅ OK — 11テストケースがGiven/When/Then形式で記述済み
+- docs/issues/issue-269.MD: ✅ OK — 作業ログ全件記録済み
+
+[PR発行済み #272]
+
+---
+
+### noragrammer-crypto — 2026-03-18T08:56:25Z
+
+作業完了 2026-03-18 09:05 / 所要時間: 17分
 
 ---

@@ -1,7 +1,7 @@
 ---
 issue: 1565
 title: "[Task] xp_Architect: 種別判定をストーリー軸に再定義 + Task直行時のE2E/spec要否明示判定を必須化"
-state: open
+state: closed
 labels: [task, epic/SoloXP, PriorityHigh]
 author: noragrammer-crypto
 created_at: 2026-06-20T18:07:29Z
@@ -44,7 +44,6 @@ feature/issue-1557
 作業開始 2026-06-21 00:00
 [ProjectStatus: InProgress]
 
-
 ---
 
 ### noragrammer-crypto — 2026-06-20T23:52:04Z
@@ -56,7 +55,6 @@ feature/issue-1557
 スキップ: Unit / Functional / E2E すべて — テスト対象コードなし（SKILL.md は実行可能コードではなく、Director/Architect が読み込む記述ドキュメント）
 
 備考: この変更内容を検証する「SKILL.md 記述の存在チェック」ユニットテストは別タスク #1568（e2e_test_creation）で `SoloXP/tests/unit/` に追加される予定。本タスクではテスト作成は行わない。
-
 
 ---
 
@@ -77,7 +75,6 @@ feature/issue-1557
 テスト結果:
 - 単体テスト: PASS 94件 / FAIL 0件（`SoloXP/tests/unit/`、ドキュメント変更につき既存スイートに回帰なしを確認。本タスク自体はTesterフェーズで「ドキュメントのみの変更」と判定済みのため新規テストは作成していない）
 - 機能テスト: 対象外（ドキュメントのみの変更）
-
 
 ---
 
@@ -103,5 +100,45 @@ feature/issue-1557
 [Auditor GREEN]
 PASS: 94件 / テストコマンド: `npm run test:unit`（SoloXP）。ドキュメントのみの変更のため機能テストは対象外と判断。
 
+---
+
+### noragrammer-crypto — 2026-06-20T23:55:19Z
+
+## ドキュメント生成完了
+
+生成・更新したファイル:
+- `SoloXP/docs/issues/issue-1565.MD`: イシュー本文・コメント全件を保存（`xp_issue2md`）
+
+スキップしたステップ:
+- `xp_doc_spec`: 親ストーリー #1557 の計画上、機能仕様書更新（`SoloXP/docs/spec/xp_architect.md` 等）は専用タスク #1569（depends_on: #1564,#1565,#1566,#1567）に一元化されている。実装タスクごとに spec を更新すると #1569 の役割と重複・競合するため、本タスクでは見送り、#1569 にて全実装タスク完了後にまとめて反映する。
+- `xp_doc_reference` / `xp_doc_UnitTests` / `xp_doc_FunctionTests` / `xp_doc_E2ETests`: 本タスクは `SKILL.md` のドキュメント記述変更のみで、コード・テストファイルの追加変更がないため対象なし（Testerフェーズの「ドキュメントのみの変更」判定と一致）。
+
+---
+
+### noragrammer-crypto — 2026-06-20T23:55:46Z
+
+[Auditor ドキュメントチェック中]
+
+### ドキュメントチェック結果
+- `dotfiles/.claude/skills/xp_Architect/SKILL.md` / `SoloXP/skills/xp_Architect/SKILL.md`: OK（両ファイル完全一致を確認、同期済み）
+- `SoloXP/docs/issues/issue-1565.MD`: OK（xp_issue2mdで生成済み、本文・コメント全件を記録）
+- `SoloXP/docs/spec/xp_architect.md`: 未更新（意図的）。親ストーリー #1557 の計画上、spec反映は専用タスク #1569 に一元化されているため本タスクではスキップが正当と判断。
+- `SoloXP/docs/spec/README.md`: 既存の索引未掲載状態（`xp_architect.md` が未索引）は本タスク起因ではなく既知の別イシュー #1365 の範疇。本タスクのスコープ外。
+
+[Auditor doc OK]
+xp_Director がPRを発行します。
+
+---
+
+### noragrammer-crypto — 2026-06-20T23:56:30Z
+
+[PR発行済み #1571]
+
+---
+
+### noragrammer-crypto — 2026-06-20T23:56:31Z
+
+[ProjectStatus: Done]
+作業完了 2026-06-21 00:15 / 所要時間: 15分
 
 ---

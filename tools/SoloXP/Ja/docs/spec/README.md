@@ -9,8 +9,11 @@
 | [xp_auditor.md](xp_auditor.md) | xp_Auditor | テスト実行・品質監査・サブイシュー完了報告 |
 | [xp_director.md](xp_director.md) | xp_Director | AllGREEN後のxp_Reviewer呼び出し・E2E/PR発行/クローズフロー含む |
 | [xp_reviewer.md](xp_reviewer.md) | xp_Reviewer | コードレビュー・高リスク自動起票・AllGREEN後PR発行前に実行 |
+| [xp_securityreviewer.md](xp_securityreviewer.md) | xp_SecurityReviewer | セキュリティレビュー（`security-review`呼び出し）・高リスク自動起票・xp_Reviewer直後/PR発行前に実行 |
 | [xp_review_workflow.md](xp_review_workflow.md) | xp_review_workflow | ワークフロー振り返り・逸脱検知・原因SKILL特定 |
 | [xp_doc_generation.md](xp_doc_generation.md) | xp_doc_reference / xp_doc_spec / xp_doc_UnitTests / xp_doc_FunctionTests / xp_doc_E2ETests | ドキュメント生成対象・出力先ディレクトリの優先順位付き解決（api/&lt;EpicName&gt;優先→フォールバック、#1532） |
+| [xp_issue_archive_finalize.md](xp_issue_archive_finalize.md) | xp_issueArchiveFinalize | Epic完了付近でIssue Markdownスナップショット（`docs/issues/issue-*.MD`）のうち `state: open` のまま実際はclosed済みのものを再取得・finalizeする（#2971/#3484） |
+| [xp_complete_tasks.md](xp_complete_tasks.md) | xp_CompleteTasks | 親Story/BugのサブTaskを依存解消順に `xp_Director` で逐次実装しPRマージ待ちポーリング・AllGREENフロー起動まで自動化するオーケストレーター（#3621） |
 
 ## SoloXP正本化・公開パイプライン（#2168）
 

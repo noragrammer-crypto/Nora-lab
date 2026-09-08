@@ -52,6 +52,10 @@ Codex（`@chatgpt-codex-connector`）がPRレビューから自動生成した�
 gh issue view <issue番号> --json title,body,comments --repo <owner>/<repo>
 ```
 
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__issue_read`（method: `get`, issue_number）で
+本文を、`mcp__github__issue_read`（method: `get_comments`, issue_number, perPage: 100）でコメントを
+取得する（`xp_issue2md`〈#3204〉で確立したパターン。#3218）。
+
 ### 2. 指摘内容を読んで納得できるか判断する
 
 タイトル＋bodyの指摘内容を読み、対象コードの文脈も踏まえて技術的に妥当か判断する。
@@ -59,7 +63,11 @@ gh issue view <issue番号> --json title,body,comments --repo <owner>/<repo>
 ### 3-A. 納得できる場合
 
 - 対象ファイルを特定して修正する（テストスイートの全実行は不要）
-- `feature/issue-{番号}` ブランチを作成し、修正をコミット・プッシュする
+- `codex/issue-{番号}` ブランチを作成し、修正をコミット・プッシュする
+  （`feature/issue-*` は使わない。AllGREENマーカー必須チェック（`.github/workflows/allgreen-check.yml`、
+  #1691/#3037）が `feature/issue-*` ブランチ全件に対して親イシューの `[Auditor GREEN]`/`[Auditor doc OK]`
+  マーカーを要求するが、Codexイシューは方針上 xp_Director/xp_Tester/xp_Auditor を通さないため
+  マーカーが構造的に付かず、必ずCI失敗する。#3055で発覚）
 - PR を作成して `Closes #<番号>` を含める
 
 ### 3-B. 納得できない場合

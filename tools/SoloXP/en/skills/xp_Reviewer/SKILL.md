@@ -15,10 +15,10 @@ High Risk issues are automatically raised as improvement recommendation issues.
 
 ## Responsibilities
 
-- Call `code-reviewer` subagent (provided by feature-dev plugin) to perform code review
+- Call the `code-reviewer` subagent (provided by feature-dev plugin) to perform code review
 - Record review results as issue comments
 - Automatically raise improvement recommendation issues for High Risk findings
-- Medium Risk / Low Risk only comments (no user action required)
+- For Medium Risk / Low Risk, only comments (no user action required)
 
 ---
 
@@ -30,13 +30,13 @@ High Risk issues are automatically raised as improvement recommendation issues.
 
 Call the Agent tool passing the following:
 - `subagent_type`: `code-reviewer`
-- `prompt`: Indicates that the current branch `git diff` (if there are no uncommitted changes, the difference from the base branch) will be subject to review.
-Specify that compliance with the terms and conditions listed in CLAUDE.md is also included in the scope of confirmation.
+- `prompt`: Indicates that the current branch's `git diff` (if there are no uncommitted changes, the difference from the base branch) will be subject to review,
+  Specify that compliance with the terms and conditions listed in CLAUDE.md is also included in the scope of confirmation.
 - `isolation`: Not specified (worktree is not required as it is completed with only read-only tools)
 
 **Mapping of output to risk classification:**
 
-`code-reviewer` returns only indications with confidence ≥ 80 in two stages: Critical / Important. Map the risk categories in step 2 as follows:
+`code-reviewer` only returns indications with confidence ≥ 80 in two stages: Critical / Important. Map the risk categories in step 2 as follows:
 
 | code-reviewer output | xp risk classification |
 |---|---|
@@ -44,16 +44,16 @@ Specify that compliance with the terms and conditions listed in CLAUDE.md is als
 | Important (Quality/Terms Violation) | Medium Risk |
 (Since confidence < 80 is not originally reported, low risk basically does not occur. If it is pointed out, it will be treated as low risk) | Low Risk |
 
-**Fallback when `code-reviewer` cannot be called (tool not supported/error):**
+**Fallback when SOLOXP_INLINE_11__ cannot be called (tool not supported/error):**
 
 **Activation conditions (activated if any one of them applies):**
 - The call to the Agent tool itself fails with an error timeout.
-- `subagent_type: code-reviewer` is not found/unavailable error returned
+- `subagent_type: code-reviewer` is not found/unavailable error is returned
 - The call was successful, but the output does not contain any content that can be used to determine whether there is an issue or its severity (empty response/format collapse)
 
 **Confirmation steps:**
 1. Record any error messages or insufficient output as they occur.
-2. Call built-in skill `/review` to perform equivalent review:
+2. Call the built-in skill `/review` to perform an equivalent review:
    ```
    /review
    ```
@@ -74,29 +74,30 @@ Classify each finding in the review report by risk level:
 Record (write) review results as issue comments in the following format:
 
 ```markdown
-## xp_Reviewer report
+## xp_Reviewer レポート
 
-### High Risk
-<List of high risk indications. If not, “none”>
+### 高リスク指摘（High Risk）
+<高リスクの指摘一覧。なければ「なし」>
 
-### Moderate/low risk indication
-<List of medium/low risk indications. If not, “none”>
+### 中程度・低リスク指摘
+<中程度・低リスクの指摘一覧。なければ「なし」>
 
-### Overall review
-<Overall quality evaluation>
+### 総評
+<全体的な品質評価>
 ```
 
-### 4. Raise an issue to recommend improvements for high-risk issues
-
-If there is one or more High Risk findings, issue an improvement recommendation issue for each finding:
+### 4. Raise an issue to recommend improvements for high-risk issuesIf there is one or more High Risk findings, issue an improvement recommendation issue for each finding:
 
 ```bash
 gh issue create \
   --repo <owner>/<repo> \
---title "[Improvement recommendation] <Summary of the finding>" \
---body "<Detailed explanation/improvement method/scope of impact>" \
+  --title "[改善勧告] <指摘の概要>" \
+  --body "<詳細な説明・改善方法・影響範囲>" \
   --label "bug"
 ```
+
+If `gh` cannot be used (such as ClaudeCodeWeb), use `mcp__github__issue_write` (owner, repo, method: `create`, title, body,
+labels: [`bug`]) (pattern established in `xp_issue2md`〈#3204〉. #3216).
 
 Add the raised issue number to the comment of the review report.
 

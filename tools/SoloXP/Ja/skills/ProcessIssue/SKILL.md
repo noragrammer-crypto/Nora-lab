@@ -43,9 +43,36 @@ frontmatterで宣言するモデルで行われ、ProcessIssue自身のモデル
 
 ### 1. オープンイシューリストを取得する
 
+`gh` CLI が利用可能な場合はこちらを使う（従来経路）：
+
 ```bash
-gh issue list --repo <owner>/<repo> --state open --limit 50 --json number,title,labels,createdAt,body
+gh issue list --repo <owner>/<repo> --state open --limit 1000 --json number,title,labels,createdAt,body
 ```
+
+`--limit` は「取得する最大件数」であり、gh CLI は指定した件数に達するまで内部でページング（複数回のAPI呼び出し）
+を行う。`--limit 50` のように件数を低く固定すると、オープンイシューが50件を超えるリポジトリでは
+51件目以降（古い・優先度の高いイシューを含む）が取得結果に含まれず、後続のソートでも復元できない（#2759）。
+`--limit 1000` は現在のオープンイシュー数（127件、#2759起票時点）を十分上回る値とし、gh CLI のページング機能により
+実質的に全オープンイシューを一括取得する。オープンイシューが1000件に迫るほど増えた場合はこの値をさらに引き上げること。
+
+`gh` が使えない場合（ClaudeCodeWeb等、`gh issue list` が `HTTP 403` 等で失敗する場合）は
+GitHub MCP ツールにフォールバックする（`xp_issue2md`〈#3204〉で確立したパターン。#3215）：
+
+```
+mcp__github__list_issues（owner, repo, state: OPEN, fields: [number, title, labels, created_at, body], perPage: 100）
+  → 1ページ最大100件。pageInfo.hasNextPage が true の間、after にそのページの endCursor を渡して呼び出しを繰り返し、全オープンイシューを取得する
+```
+
+**取得結果の正規化：** `gh` CLI（`--json`）と MCP のフィールド名差異は以下の通り。以降の手順（2〜3）は
+正規化後の名前（`number` / `title` / `labels` / `createdAt or created_at` / `body`）のいずれでも参照できるよう扱う：
+
+| 正規化フィールド | gh CLI (`--json`) | GitHub MCP フォールバック |
+|---|---|---|
+| number | `number` | `list_issues` の `number` |
+| title | `title` | `list_issues` の `title` |
+| labels | `labels[].name` | `list_issues` の `labels`（文字列配列。要素がオブジェクトの場合のみ `.name` を使う） |
+| createdAt | `createdAt` | `list_issues` の `created_at` |
+| body | `body` | `list_issues` の `body` |
 
 全件を一括取得して、後続の選択ロジックで優先度・FIFO順に処理する。
 `task` ラベルによる優先取得は廃止。優先度（Emergency > PriorityHigh > 通常）＋ FIFO が唯一の選択基準。
@@ -88,6 +115,12 @@ gh issue list --repo <owner>/<repo> --state open --limit 50 --json number,title,
 gh issue view <issue_number> --json comments --repo <owner>/<repo>
 ```
 
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__issue_read`（method: `get_comments`, issue_number,
+perPage: 100。100件に達したら `page` を1ずつ増やして全件取得）にフォールバックする。以降のB・Cで登場する
+同種の「イシューコメント一括取得」もすべて同じフォールバックを使う（コメント本文は `comments[].body`、
+投稿日時は `comments[].created_at` として扱う。`gh --json` の `comments[].body` / `comments[].createdAt` と
+同じ内容になる）。
+
 コメント一覧から `[ProjectStatus: InProgress]` を含む**最新**コメントを探す。
 
 - 該当コメントが**ない** → InProgress なし（次のチェックへ）
@@ -106,6 +139,8 @@ gh issue view <depends_on番号> --json comments --repo <owner>/<repo> \
   | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); bodies=[c.get('body','') for c in cs]; print('GREEN') if any('[Auditor GREEN]' in b or '[Auditor doc OK]' in b for b in bodies) else None"
 ```
 
+（`gh` が使えない場合はAと同じMCPフォールバックを使う）
+
 - `[Auditor GREEN]` が見つかれば依存解消とみなす。依存先が `spec_update` タスク（`xp_doc_spec` → `xp_Auditor doc` のみを通過し `[Auditor GREEN]` は構造的に出力されない）の場合は `[Auditor doc OK]` の有無で判定する（両マーカーは排他的なため、依存先の種別を個別判定せず両方チェックしてよい）
 - どちらも見つからなければブロック中 → スキップして次の候補へ
 - **GitHub の close 状態は見ない**（クローズ済みでも `[Auditor GREEN]` / `[Auditor doc OK]` がなければブロック中）
@@ -120,6 +155,8 @@ gh issue view <depends_on番号> --json comments --repo <owner>/<repo> \
 gh issue view <issue_number> --json comments --repo <owner>/<repo> \
   | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); print(sum(1 for c in cs if '[親ブランチ作成済み]' in c.get('body','')))"
 ```
+
+（`gh` が使えない場合はAと同じMCPフォールバックを使う）
 
 - `[親ブランチ作成済み]` が **ない** → 通常の候補として選択する（ステップDへ）
 - `[親ブランチ作成済み]` が **ある** → **Architect済みイシュー** として、サブタスクに委譲する：

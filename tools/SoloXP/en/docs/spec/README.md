@@ -9,20 +9,22 @@
 | [xp_auditor.md](xp_auditor.md) | xp_Auditor | Test execution/quality audit/sub-issue completion report |
 | [xp_director.md](xp_director.md) | xp_Director | Including xp_Reviewer call after AllGREEN, E2E/PR issue/close flow |
 | [xp_reviewer.md](xp_reviewer.md) | xp_Reviewer | Code review, high-risk automatic filing, execution after AllGREEN and before PR issuance |
+| [xp_securityreviewer.md](xp_securityreviewer.md) | xp_SecurityReviewer | Security review (`security-review` call)・High risk automatic filing・Execute immediately after xp_Reviewer/before issuing PR |
 | [xp_review_workflow.md](xp_review_workflow.md) | xp_review_workflow | Workflow review, deviation detection, cause SKILL identification |
 | [xp_doc_generation.md](xp_doc_generation.md) | xp_doc_reference / xp_doc_spec / xp_doc_UnitTests / xp_doc_FunctionTests / xp_doc_E2ETests | Prioritized resolution of document generation target/output destination directories (api/<EpicName> priority → fallback, #1532) |
+| [xp_issue_archive_finalize.md](xp_issue_archive_finalize.md) | xp_issueArchiveFinalize | Re-acquire and finalize the Issue Markdown snapshot (`docs/issues/issue-*.MD`) that is actually closed as `state: open` near the completion of Epic (#2971/#3484) |
+| [xp_complete_tasks.md](xp_complete_tasks.md) | xp_CompleteTasks | Orchestrator that sequentially implements sub-tasks of parent Story/Bug with `xp_Director` in order of dependency resolution and automates PR merge wait polling and AllGREEN flow activation (#3621) |
 
 ## SoloXP originalization/publication pipeline (#2168)
 
 | File | Overview |
 |---|---|
-| `docs/skill-files-sync.md` (Path in the monorepo. Since it is outside the Nora-lab public range, the path is not a link) | Original (`SoloXP/skills/xp_*` + `workflow/skills/*`) → binary (`dotfiles/.claude/skills/`・`.claude/skills/`) synchronization direction/pre-push hook mechanism (Phase1/2) |
-| [nora_lab_publish.md](nora_lab_publish.md) | Nora-lab publishing pipeline using `make sync-nora-lab` + `make publish-nora-lab` (snapshot/diff commit method based on public HEAD standards) (Continuous sync method redesigned in Phase 3, #2761) |
+| `docs/skill-files-sync.md` (Path within the monorepo. Since it is outside the public scope of Nora-lab, it is written as a path, not a link) | Original (`SoloXP/skills/xp_*` + `workflow/skills/*`) → binary (`dotfiles/.claude/skills/`, `.claude/skills/`) synchronization direction and pre-push hook mechanism (Phase1/2) |
+| [nora_lab_publish.md](nora_lab_publish.md) | Nora-lab publishing pipeline with `make sync-nora-lab` + `make publish-nora-lab` (snapshot/diff commit method based on public HEAD standard) (redesigned continuous synchronization method in Phase 3, #2761) |
 
 ## Work log/measurement skills
 
-| File | Target skills | Overview |
-|---|---|---|
+| File | Target skills | Overview ||---|---|---|
 | [xp_worklog.md](xp_worklog.md) | xp_worklog | Aggregation of work time/token consumption, report output, worklog storage (aggregation by issue #2143, ROI aggregation by epic #2144) |
 
 ## Development principles
@@ -41,7 +43,11 @@
 
 ## Regarding specifications for non-xp_ skills (#2637)
 
-`SoloXP/docs/spec/` is a directory dedicated to specifications for xp_* skills under `SoloXP/skills/`. Specifications for non-xp_ skills/plugins, such as ProcessIssue, NovelGeneratorRun, issue-triage-agent, ops-meeting, kakuyomu_post, kakuyomu_post_ab, feature-dev plug-ins, have been moved to the following locations according to the actual destination of each skill. These files are specific to the HolyAutomater monorepo and are not included in Nora-lab (only `SoloXP/` + `workflow/skills/ProcessIssue` is exposed), so they are listed as paths within the monorepo rather than links (#2643):
+`SoloXP/docs/spec/` is a directory dedicated to specifications for the xp_* skills group under `SoloXP/skills/`.
+ProcessIssue・NovelGeneratorRun・issue-triage-agent・ops-meeting・kakuyomu_post・kakuyomu_post_ab・
+Specifications for non-xp_ type skills/plugins, such as feature-dev plug-ins, have been moved to the following locations according to the actual destination of each skill.
+These are HolyAutomater monorepo-specific files and Nora-lab (`SoloXP/` + `workflow/skills/ProcessIssue`
+(only published), so please write it as a path in the monorepo instead of a link (#2643):
 
 - ProcessIssue: `workflow/docs/spec/process-issue.md`
 - issue-triage-agent: `workflow/docs/spec/issue-triage-agent-skill.md`

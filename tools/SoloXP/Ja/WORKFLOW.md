@@ -60,7 +60,7 @@ gh issue create \
 
 Architect は：
 - イシュー種別を Story / Task / Bug に分類する
-- タスクを依存関係付きでサブイシューとして発行する
+- タスクを依存関係付きでサブイシューとして発行する（必須付随タスク込みの合計タスク数が1件のみの場合はサブイシュー・親ブランチを作らず、親イシューをそのままルートタスクとして扱う。詳細は `xp_Architect/SKILL.md` 手順4-A）
 - 実行計画を Architect 分析結果コメントとして記録する
 
 ### 4. タスク処理（1タスク1PRルール）
@@ -72,7 +72,7 @@ Architect は：
 | タスク種別 | 識別方法 | 処理スキル |
 |---|---|---|
 | `e2e_test_creation` | 「E2Eテストスイート作成」または task_type: e2e_test_creation | xp_E2Etest <親ストーリー番号> |
-| `spec_update` | 「機能仕様書更新」または task_type: spec_update | xp_doc_spec <epic> <親ストーリー番号> |
+| `spec_update` | 「機能仕様書更新」または task_type: spec_update | xp_issue2md <task_issue> → xp_doc_spec <epic> <親ストーリー番号> |
 | `bug_reproduction_test` | 「バグ再現テスト追加」または task_type: bug_reproduction_test | xp_Tester <task_issue> |
 | 通常実装タスク | 上記以外 | xp_Tester → xp_Implementer → xp_Auditor → xp_Documenter |
 
@@ -107,11 +107,28 @@ Architect は：
 
 ### 6. AllGREEN チェック → 受け入れテスト
 
-PR 発行直後に xp_Director が全サブイシューの `[Auditor GREEN]` を確認する：
+**重要（実行タイミング）**: 4節の通常実装タスクのステップにあるとおり、`xp_Director` は
+タスクPR発行後は**必ず一旦停止**する（1タスク1PRルール、詳細は `xp_Director/SKILL.md` 手順3参照）。
+AllGREENチェックはそのラン内では**実行しない**。次回 `/ProcessIssue` 実行時に親Story/Bugイシューが
+評価される段階で全サブイシューの完了を検知し、そこから `xp_Director <親イシュー番号>` が**別ランとして**
+呼び出されたときに、以下のAllGREENチェックを実行する。
 
-- **AllGREEN の場合** → `xp_RunE2ETests` で受け入れテストを実行する
-  - ✅ 通過 → 親ストーリーイシューの PR を発行してClose
-  - ❌ 失敗 → 失敗内容で新サブイシューを起票し、親イシューは継続
+`xp_Director` が全サブイシューの完了マーカーを確認する（通常タスクは `[Auditor GREEN]`、
+`spec_update` タスク〈`task_type: spec_update` または「機能仕様書更新」〉は `[Auditor doc OK]`
+——`spec_update` は構造上 `[Auditor GREEN]` を出力しないため、この2種の完了マーカーで判定する）：
+
+- **AllGREEN の場合** → 親ブランチ → main の PR を発行する前に、以下の必須ゲートを**すべて**通過させる（詳細は `xp_Director/SKILL.md` 手順3-eを参照）：
+  1. `xp_Auditor test <epic> <story>` で Story-level 受け入れテスト（E2E）を実行する
+     - ✅ GREEN → 次のゲートへ進む
+     - ❌ RED → 失敗内容で新サブイシューを起票し、親イシューは継続（PRは発行しない）
+  2. Story-level GREEN 確認後、`xp_Reviewer <epic> <story>` によるコードレビューを実施する（高リスク指摘があれば改善勧告イシューを自動起票）
+  3. xp_Reviewer 完了後、`xp_SecurityReviewer <epic> <story>` によるセキュリティレビューを実施する（組み込みスキル `security-review` を呼び出し、高リスク指摘があれば改善勧告イシューを自動起票）
+  4. `xp_Auditor doc <epic> <story>` でドキュメントチェックを実施する
+  5. `xp_RunE2ETests` で E2E テストスイートを確認する（手順1の Story-level 受け入れテストとは別に、xp_Director 自身が実行する参考情報のE2Eスイート確認ゲート。`xp_RunE2ETests` 自体は所有権判定を持たないため、手順1で既に所有権判定済み〈他ストーリー所有〉のREDと一致する raw FAIL のみでは本ゲートを不成立としない。手順1のRED一覧と一致しない新規FAILが検出された場合は不成立とし、手順1の `xp_Auditor test` からやり直す。#2817）
+  6. `spec_update` タスク完了ゲート: サブイシューに `task_type: spec_update`（または「機能仕様書更新」）タスクが存在する場合、`[Auditor doc OK]` が記録されているか確認する。未完了ならPRを発行せず停止する
+  7. 全サブタスクPRのマージ確認ゲート: 完了済みサブイシューそれぞれに対応する `merged` 状態のPRが実在するか個別に確認する（`[Auditor GREEN]`/`[Auditor doc OK]` があってもPRが未マージなら AllGREEN 不成立）
+  8. Issue Markdown finalize（ゲートではなく付随的な同期処理）: `xp_issueArchiveFinalize <EpicName>` を呼び、対象Epic配下で `state: open` のままclosed済みのIssue Markdownを最新版へ差し替える。結果はAllGREEN成立可否には使用しない（#2971の非目的）。1件以上更新があれば親ブランチ上でコミット・pushしてから次へ進む
+  - 上記1〜7のゲートすべて通過（手順8は参考情報のため通過条件に含めない）→ 親ストーリーイシューの PR を発行してClose（PR本文に `## AllGREEN チェック結果` セクションで各ゲート＋Issue Markdown finalizeの結果を要約する。テンプレートは `xp_Director/SKILL.md` 手順3-e-9参照。#1690, #3485）
 - **未完了サブイシューがある場合** → そのまま停止（次タスクは次回 `/xp_Director` 呼び出しで着手）
 
 ### 7. 人間が確認・マージ（ユーザー）

@@ -1,91 +1,142 @@
-# ProcessIssue — Issue Triage and Automatic Selection
+# ProcessIssue ─ Issue triage and automatic selection
 
 ## Overview
 
-The note article, ["The AI Blurted Out My Issue Triage Before I Wrote It"](https://note.com/noragrammer/n/n82e787b91fdb) (Japanese), puts into words the **judgment criteria themselves** behind how `ProcessIssue` automatically selects one issue from the open issue list — which label to use for what, and what to prioritize versus defer. This document reorganizes those criteria as `ProcessIssue`'s implementation and label conventions.
+The note article "[Issues triage, the story told first by AI] (https://note.com/noragrammer/n/n82e787b91fdb)"
+`ProcessIssue` is the **judgment criteria** itself when automatically selecting one issue from an open issue (which label to use, how to use it, etc.)
+It is a verbalization of what to prioritize and what to postpone. This document describes the criteria for
+This has been reorganized as the implementation and label operation of `ProcessIssue`.
 
-The automatic-selection entry point that ships with SoloXP itself is `xp_Director` (with no argument), but `xp_Director` (no argument) has no selection logic of its own — it functions as a backward-compatible entry point that, once called, immediately delegates to `/ProcessIssue` (see `SoloXP/skills/xp_Director/SKILL.md` for the implementation). The actual issue-selection logic lives in `ProcessIssue`. When you run multiple workflows (for example, work other than software development sharing the same issue queue) out of a single queue, you need a layer that decides which workflow a selected issue should go to — think of `ProcessIssue` as one implementation that combines that selection logic with a routing layer.
+The automatic selection entry included with SoloXP itself is `xp_Director` (no argument), but `xp_Director` (no argument) itself is
+It has no selection logic and acts as a backward compatible entry point that immediately delegates processing to `/ProcessIssue` when called.
+(See `SoloXP/skills/xp_Director/SKILL.md` for implementation). The actual issue selection logic is on the `ProcessIssue` side.
+There is. Combine multiple workflows (work other than software development in the same issue queue, etc.) into one
+When operating in a queue, a layer is required to decide which workflow the selected issue should be passed to,
+You can think of `ProcessIssue` as an implementation example that combines the selection logic and distribution layer.
 
-## The role of ProcessIssue
+## Role of ProcessIssue
 
-`ProcessIssue`'s responsibility is limited to the following two things. It never makes the actual design/implementation call.
+`ProcessIssue`'s responsibilities are limited to two things: Actual design and implementation decisions are not made.
 
-1. **Selection** — pick one issue from the open issue list that's safe to start on automatically, right now
-2. **Routing** — delegate to the appropriate workflow (`xp_Director`, etc.) based on the selected issue's content
+1. **Select** ─ Select one issue from the open issue list that you can start automatically right now.
+2. **Distribution** ─ Delegates to the appropriate workflow (`xp_Director`, etc.) depending on the content of the selected issue
 
-Because both selection and routing are rule-based mechanical processing, `ProcessIssue` itself can run on a lightweight model. The substantive design/implementation judgment is left to whichever skill it delegates to, at that skill's own discretion (its declared model) — so improving `ProcessIssue`'s own judgment accuracy has no effect on implementation quality. That's the division of labor.
+Since both selection and sorting are mechanical processes based on rules, `ProcessIssue` itself is a lightweight model.
+be made to work. Substantive design and implementation decisions are made by the delegated skill at its own discretion (declared model).
+The division of roles is such that even if the accuracy of judgment on the `ProcessIssue` side is improved, the implementation quality will not be affected.
 
 ```
-Open issue list
+オープンイシュー一覧
       ↓
-[ProcessIssue] selects one unblocked issue (the label rules covered later in this document)
+[ProcessIssue] 未ブロックの1件を選択（本ドキュメント後半のラベルルール）
       ↓
-[ProcessIssue] routes it to a workflow based on content (no judgment call — routing only)
+[ProcessIssue] 内容に応じてワークフローへ委譲（判断はしない・振り分けるだけ）
       ↓
-The actual design/implementation judgment is made by whichever skill it delegated to
+実際の設計・実装判断は委譲先スキルが行う
 ```
 
-## Customizing: matching workflow routing to your own repository
+## Customization: Tailor workflow distribution to your repository
 
-`ProcessIssue`'s workflow routing is meant to be customized to match the kind of work each repository handles. Write the match conditions using labels or title/body keywords. This is especially useful when a single repository runs multiple lines of work (for example, writing or data-processing work alongside software development) out of the same issue queue.
+Customize `ProcessIssue` workflow distribution according to the type of work handled by each repository.
+This is part of the premise. Judgment conditions are written using keywords in the label or title/text. in one repository
+When multiple types of work (writing other than software development, data processing, etc.) are being done in the same issue queue.
+especially effective.
 
-Points to keep in mind when writing match conditions:
+Points to note when writing judgment conditions:
 
-- **Prefer labels over keyword matching.** Use title/body keyword matching only as a fallback for when a label was forgotten; making labels (e.g. `epic/<name>`) the primary signal produces fewer misclassifications.
-- **Build in a way to pass options straight through to the delegate skill.** If `ProcessIssue` receives a flag such as `implementer=codex`, designing it to forward that flag unchanged to the delegate call lets you change the delegate's behavior without touching `ProcessIssue` itself.
-- **If a software-development-only workflow is all you need, it's fine to route to just one destination.** In that case `ProcessIssue` effectively becomes nothing more than an "issue selection layer" — a thin wrapper that hands the selected issue straight to `xp_Director`.
-- **Don't automatically run a workflow combination you're unsure about.** For issue types that need a manual call, also build in the option of commenting on the issue and stopping to wait for the user's instructions (avoiding the risk of over-automating into unintended work).
+- **Give priority to judgment based on labels. ** Title/body keyword determination is a fallback in case you forget to add a label
+  It is better to use a label (e.g. `epic/<名前>`) as the main judgment to avoid false judgments.
+- **Prepare a mechanism to pass options through to the delegated skill. ** `ProcessIssue` is
+  If a flag like `implementer=codex` is received, it is passed on to the delegate call as is.
+  By designing it, you can replace only the behavior of the delegate destination without changing `ProcessIssue` itself.
+- **If you only need software development workflows, you can narrow down the allocation to one destination. ** In that case
+  `ProcessIssue` is essentially only the "issue selection layer", and the selected issue is directly transferred to `xp_Director`
+  It becomes a thin wrapper that can be passed around.
+- **Do not automatically execute workflow combinations that are difficult to judge. ** Detects lineage issues that require manual judgment
+  If so, provide the option to comment on the issue, stop the process, and wait for user instructions.(Avoid the risk of over-automating and initiating unintended tasks).
 
-## Automatic issue selection by label
+## Automatic selection of issues by label
 
-This is where the note article's central theme comes in. Even once the "how to select" mechanism is in place, "which label to attach, and how" tends to remain tacit knowledge. What follows puts that criteria into words.
+This is the central theme of the note article. Even if the ``selection procedure'' itself can be structured, ``which label should be attached and how?''
+The criteria for judgment tend to be tacit knowledge. The following is a written statement of the criteria.
 
-### Priority: three tiers of eligible work, plus FIFO
+### Priority: 3 stages of execution + FIFO
 
-Issues eligible to be worked on fall into three tiers.
+The issues targeted for action are divided into three stages.
 
 | Bucket | Condition |
 |---|---|
-| `emergency` | Has the `Emergency` label (today or tomorrow) |
-| `high` | Has the `PriorityHigh` label (this week) |
-| `normal` | Neither (unlabeled — oldest first, steadily) |
+| `emergency` | `Emergency` Labeled (today and tomorrow) |
+| `high` | `PriorityHigh` Label available (this week) |
+| `normal` | None (unmarked/oldest first) |
 
-Buckets are processed in the order `emergency` → `high` → `normal`, and **within each bucket, issues are always processed in ascending issue-number order (oldest first)**. Within the same priority tier, "newer vs. older" is never judged case by case. Keeping it a plain FIFO concentrates the cost of prioritization into a single decision: which bucket does this belong in.
+Process buckets in the order `emergency` → `high` → `normal`, **Always issue number within each bucket.
+Process in ascending order (oldest first). ** Do not judge "new or old" individually within the same priority.
+By using a simple FIFO, the cost of prioritization decisions can be reduced to just the one-time process of deciding which bucket to put the data into.
 
-### The exclusion labels: backlog / block / ignore
+### How to use exclusions: backlog / block / ignore
 
-There are three labels that pull an issue out of selection, but **the mechanical behavior is identical for all three** (the issue simply drops out of the candidate pool). What differs is only the stated reason for *why* it's not happening right now.
+There are three types of labels that can be removed from selection, but all have the same mechanical behavior (they are only removed from selection candidates).
+The only difference is in the statement of intent: ``Why not do it now?''
 
-| Label | Meaning | Resumption condition |
+| Label | Meaning | Restart condition |
 |---|---|---|
-| `backlog` | Deferred even though the work is safe to run and its direction and approach are already decided. Use it when execution should wait for practical capacity or scheduling reasons — most often insufficient token budget — rather than because the work is risky or undecided | Resumes once the `backlog` label is removed (the exclusion filter is evaluated *before* the priority-bucket classification, so raising a priority label while `backlog` is still attached does not bring the issue back into selection. If you want to expedite it, remove the label first and, if needed, add a priority label separately) |
-| `block` | Judgment withheld. Letting it proceed automatically would be risky, or you haven't yet made up your own mind | Not time-based — resumes only once the underlying state itself changes (direction settles, the cause is identified, etc.) |
-| `ignore` | Deliberately ignored. Used, after commenting with the reason, for cases such as not being convinced by an AI's automated review finding — the terminal state for "not doing this" | Doesn't resume until manually revisited |
+| `backlog` | Postponed. The policy and starting method are decided, and you are simply waiting for your turn. | Restart by removing the `backlog` label (exclusion filters are evaluated before priority bucket classification, so even if you raise the priority label with `backlog` attached, it will not return to the selection target. If you want to hurry, remove the label and add a separate priority label if necessary) |
+| `block` | Judgment pending. Is it dangerous to let it proceed automatically, or have you not yet made up your mind? | It is not the passage of time, but the state itself that changes (the policy is fixed, the cause is determined, etc.) |
+| `ignore` | Consciously ignored. If you are not satisfied with the automatic review pointed out by AI, you can use it after commenting the reason. | Do not restart until you manually review it |
 
-Concrete cases for using `block`: torn between multiple implementation approaches, a bug with an unknown cause that needs exploratory debugging, or the blast radius is large enough that you don't want it to run unattended without confirmation.
+Specific example of using `block`: You are confused between multiple implementation strategies, you need exploratory debugging due to an unknown bug,
+The area of influence is large and I don't want to let it run on its own without checking, etc.
 
-When in doubt, separate **whether the work is safe to automate** from **whether it should consume execution capacity now**. If it is unsafe or needs judgment, use `block`. If it is safe and should be selected now, leave it unlabeled (or add a priority label). If it is safe but should wait because of capacity or scheduling constraints, use `backlog`.
+Another specific example (#3116): **Starting the code implementation phase of a new Epic in parallel with the existing bug inventory**.
+Research phases and manual setup tasks can be undertaken in parallel at low cost;
+Involves code implementation of a new Epic (an Epic that has no past merged PR experience and is not in stable operation)
+The task is to open the entire repository with the `bug` label and without `backlog`/`ignore`
+While at least one issue remains, add `block` to remove it from the automatic start target and resolve the existing bug.
+Prioritize (Add `block` to new Epic tasks waiting in `backlog` as well. `backlog`
+(to avoid bypassing this gate when unlocking). Judgments are made each time based on the open issue list at that time.
+Do it - Even if two or three specific bugs are resolved, the inventory will not be reduced to 0 if another target bug has newly occurred.
+When the inventory reaches 0, remove `block` and restart the process (for details, see `docs/issues/backlog-triage-3116.md`reference).
 
-### The two faces of environment labels: "excluding" vs. "restricting"
+When in doubt, there's only one criterion: **"Is it okay to start automatically now?"** If it's okay.
+`backlog` or unmarked, if you feel unsafe, `block`.
 
-When you have more than one development environment (phone, browser-based Claude Code Web, GitHub Codespaces, a local machine, etc.), the same issue queue ends up being pulled from by multiple environments. Environment labels (`env/*`) deserve a note here: **the same label format carries two opposite intents at once.**
+### The dual nature of environmental labels: “repelling” or “binding”?
 
-1. **Exclusion use (guarding against unsupported environments):** for work that's unstable or simply can't run in a particular environment — browser automation tasks, for example — label only the environments that *can* handle it, so unsupported environments are automatically skipped.
-2. **Restriction use (forcing a specific environment):** for work that depends on local files, or that you want to walk through visually, deliberately attach a label limiting it to one specific environment. Other environments then wait, hands off, until you open a session in that specific environment.
+If you have multiple development environments (smartphone, ClaudeCode Web on a browser, GitHub Codespaces, local PC, etc.),
+The same issue queue will be picked up from multiple environments. At this time, the environment label (`env/*`) is
+**Note that two diametrically opposed intentions coexist within the same format**.
 
-The design that makes both uses work within the same label system is: no label is the default (runnable anywhere), and a label is only added when there's an actual constraint.
+1. **Purpose of use (unsupported environment guard)**: Tasks that involve browser automation, etc. are unstable or cannot be executed in certain environments.
+   Label only the environments that are compatible with certain types of work, so that environments that are not compatible are not automatically selected.
+2. **Use for binding (specified execution)**: For work that depends on local files or work that you want to proceed with visual confirmation.
+   Add a label that is limited to a specific environment. This allows other environments to open until you open a session in the specified environment.
+   Wait without reaching out.
 
-### Relationship to the dependency and in-progress checks
+As for the design, ``No label is the default and can be executed anywhere'' ``Label is only added when there are restrictions''
+By using this method, both uses can be expressed using the same label system.
 
-Beyond the priority and exclusion labels above, `ProcessIssue` also checks each candidate issue for whether it's "already being processed on another thread" (a `[ProjectStatus: InProgress]` comment) and whether "its dependency issue is complete" (the `## Dependencies` section, and whether the dependency's completion marker is present) before making its final selection. These two are less a matter of judgment and more of a mechanical consistency check, and differ in nature from the "labels expressing intent" this document otherwise covers, so the details are left out here — except for one point worth calling out explicitly because it's easy to miss when customizing your own selection logic: the completion marker to look for is `[Auditor GREEN]` when the dependency is a normal task, but `[Auditor doc OK]` when it's a `spec_update` task (one that only passes through `xp_doc_spec` → `xp_Auditor doc`, so `[Auditor GREEN]` is structurally never emitted).
+### Relationship with dependencies/ongoing checks
 
-## Why triage becomes a "one-time cost"
+In addition to the above filtering by priority/exclusion labels, `ProcessIssue` is used for each candidate issue.
+"Is it being processed in another thread?" (`[ProjectStatus: InProgress]` comment)
+"Is the dependent issue complete?" (`## 依存関係` section, whether there is a completion marker for the dependent issue)
+After checking, select the final one. These two are mechanical consistency checks rather than judgment criteria,
+The details are omitted because the nature is different from the "statement of intent by label" that this document deals with, but the completion marker is
+If the dependent is a normal task, `[Auditor GREEN]`, `spec_update` tasks (`xp_doc_spec` → `xp_Auditor doc`
+`[Auditor GREEN]` is not output structurally), then `[Auditor doc OK]` is seen.
+It is easy to overlook this when customizing the selection logic by yourself, so please note it clearly.
 
-Rethinking your judgment criteria from scratch every time is exhausting. The "exclude" vs. "restrict" split for environment labels, and the "defer" vs. "withhold" split for priority — once you've written these boundaries down explicitly, applying them the next time is all that's left to do. That's the point of this label system: it concentrates the cost of judgment into the one-time act of writing the rules.
+## Why triage is a “one-time cost”
+
+It is tiring to rethink the criteria for judgment from scratch every time. ``Repelling'' and ``binding'' environmental labels, and ``postponing'' priorities.
+``Reservation'' - Once the boundaries have been clearly defined, all you have to do is apply them from now on. cost of decision
+The aim of this labeling system is that it can be summarized as ``one-time creation of rules''.
 
 ## Related documents
 
-- note article: ["The AI Blurted Out My Issue Triage Before I Wrote It"](https://note.com/noragrammer/n/n82e787b91fdb) (Japanese)
-- [The SoloXP operating loop](./actual-loop.md) — Where the issues that `ProcessIssue` processes come from in the first place (the outer-loop big picture)
-- [Setup manual](./setup.md) — The initial label-preparation steps (the label list and who assigns them)
-- [Usage tutorial](./tutorial.md) — A worked example from filing an Issue to merging the PR
+- Note article: [Issu triage, the story told first by AI](https://note.com/noragrammer/n/n82e787b91fdb)
+- [Solo
+  How is it born in the first place (overall picture of the outer loop)
+- [Setup manual](./setup.md) ── Initial procedure for preparing labels (list of types and sources)
+- [How to use tutorial](./tutorial.md) ── Examples from issuing an issue to merging PR

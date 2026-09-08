@@ -163,6 +163,10 @@ feature/issue-{親番号}
 **ラベル付与ルール:**
 - 基本ラベル: `task`, `epic/<epic名>` を付与する
 - ラベルが存在しない場合は `gh label create` で作成してから付与する
+  （`gh` が使えない環境（ClaudeCodeWeb等）の場合: `gh label create` に直接対応するMCPツールは存在しない
+  既知のギャップ。`task` / `epic/<EpicName>` 等の頻出ラベルは事前作成しておく運用とし、存在しないラベルは
+  付与を諦めてイシューを作成する。ただし後からラベルを作成しても既存イシューへは遡って付与されないため、
+  手動作成の依頼コメントには「作成後、本イシューに手動で付与してください」まで明記する（Codexレビュー指摘・#3254）。#3214）
 
 イシュー作成後、必ず GitHub Sub-Issues として親イシューに紐付ける：
 
@@ -172,6 +176,9 @@ gh api repos/{owner}/{repo}/issues/{parent_number}/sub_issues \
   --method POST \
   --field sub_issue_id=$ISSUE_DB_ID
 ```
+
+`gh` が使えない場合（ClaudeCodeWeb等）は `mcp__github__sub_issue_write`（method: `add`, sub_issue_id には
+作成したイシューのデータベースID〔`mcp__github__issue_read` method: `get` の `id`〕を使用）にフォールバックする（#3214）。
 
 これにより `mcp__github__issue_read`（method: `get_sub_issues`）が正しくサブイシューを返すようになる
 （`gh issue view --json subIssues` は未対応のため利用しない）。
@@ -242,7 +249,7 @@ feature/issue-{親番号}
 
 ## 備考
 task_type: spec_update
-xp_Director はこのタスクを xp_doc_spec <epic> <親ストーリー番号> で処理すること。
+xp_Director はこのタスクを xp_issue2md <このタスクのイシュー番号> → xp_doc_spec <epic> <親ストーリー番号> の順で処理すること。
 ```
 
 #### Bug イシューの場合：必須先行タスク
@@ -359,3 +366,5 @@ graph LR
 | 2026-04-24 | 1.0.0 | 優先度ラベル伝播ルール追加（Emergency/PriorityHigh） | #717 |
 | 2026-06-21 | 1.1.0 | 種別判定の第一基準を「観測可能な振る舞いの変更を伴うか」に再定義（規模は副次基準に降格）。Task イシューの E2E/spec 要否判定（手順1-1）を必須化し、判定理由のコメント記録を必須化。必須追加タスク（E2E/spec）の適用対象を Story から「Story または観測可能な振る舞い変更を伴う Task」に拡大 | #1557, #1565 |
 | 2026-07-17 | 1.2.0 | step 3 を `code-architect` サブエージェント（Agent tool, subagent_type: code-architect）呼び出しに改訂。出力（Build Sequence / Implementation Map 等）から xp 実行計画（depends_on / task_type）へのマッピング表を追加。フォールバック発動条件（エラー・タイムアウト・空応答）と確認手順（手動コードトレース手順・コメントフォーマット）を明記 | #1381 |
+| 2026-08-29 | 1.3.0 | `gh api .../sub_issues`（POST）に `mcp__github__sub_issue_write` フォールバックを追加。`gh label create` のMCP側ギャップ（対応ツールなし）と代替手段（頻出ラベル事前作成＋手動作成依頼）を明記 | #3205, #3214 |
+| 2026-08-29 | 1.3.1 | ラベル欠落フォールバックに、手動作成後の既存イシューへの遡及付与の必須明記を追加（Codexレビュー指摘: 作成のみでは既存イシューに反映されずラベルベースのルーティングから漏れる） | #3254 |

@@ -6,11 +6,15 @@ model: claude-haiku-4-5-20251001
 
 ## Overview
 
-Select one unblocked issue from the open issue list, and run one of three workflows depending on the issue's content.
+Select one unblocked issue from the open issue list,
+Execute one of three workflows depending on the content of the issue.
 
-Functions as the successor / migration destination for `/xp_Director` (with no argument). `/xp_Director` (with no argument) itself is not being removed; it remains available.
+Functions as a successor/migration destination for `/xp_Director` (no argument).
+`/xp_Director` (no argument) itself is not deleted. Still available.
 
-Both issue selection and workflow routing are rule-based mechanical processing, so this skill runs on a lightweight model (Haiku). The substantive design/implementation judgment is carried out by whichever skill it delegates to (`xp_Director`, `NovelGeneratorRun`, `ProcessCodexIssue`), each declaring its own model in its frontmatter — so changing ProcessIssue's own model has no effect on that judgment (#2907).
+Issue selection and sorting decisions are both rule-based mechanical processes that operate on a lightweight model (Haiku).
+Substantive design and implementation decisions are made by the delegates (`xp_Director`, `NovelGeneratorRun`, `ProcessCodexIssue`).
+This is done in the model declared in frontmatter and is not affected by model changes in ProcessIssue itself (#2907).
 
 ---
 
@@ -18,57 +22,89 @@ Both issue selection and workflow routing are rule-based mechanical processing, 
 
 ### `/ProcessIssue [implementer=codex]`
 
-Select an unblocked issue from the open issues and run the workflow that matches its content.
+Select an unblocked issue from open issues,
+Execute workflows according to the content.
 
-If `implementer=codex` is given, the flag is passed through unchanged when delegating to `xp_Director` in Workflow 3 (software/skill development). This option exists for batch experiments that clear the backlog using the Codex CLI as implementer. Behavior is unchanged when the flag is omitted.
+If `implementer=codex` is specified, workflow 3 (software development/skills development)
+Pass the flag as is when delegating to `xp_Director`. Backlog with Codex CLI implementation
+Option for batch experiments to digest. The default behavior is unchanged.
 
 ---
 
 ## Responsibilities
 
-- Fetching the open issue list and selecting an unblocked issue
-- Deciding which workflow to route to, based on issue content
-- Delegating processing to each workflow
+- Obtain open issue list and select unblocked issues
+- Workflow distribution judgment based on issue content
+- Delegation of processing to each workflow
 
 ---
 
 ## Processing flow
 
-### 1. Fetch the open issue list
+### 1. Get the open issue list
+
+`gh` If CLI is available, use this (legacy route):
 
 ```bash
-gh issue list --repo <owner>/<repo> --state open --limit 50 --json number,title,labels,createdAt,body
+gh issue list --repo <owner>/<repo> --state open --limit 1000 --json number,title,labels,createdAt,body
 ```
 
-Fetch everything at once, then process it in priority/FIFO order using the selection logic below. Preferential fetching by the `task` label has been discontinued. Priority (`Emergency` > `PriorityHigh` > normal) + FIFO is the sole selection criterion.
+`--limit` is the "maximum number of items to retrieve", and gh CLI internally pages (multiple API calls) until the specified number is reached.
+do. If you fix the number low like `--limit 50`, repositories with more than 50 open issues will
+Items after the 51st (including older and high-priority issues) are not included in the retrieved results and cannot be restored even with subsequent sorting (#2759).
+`--limit 1000` is a value that is well above the current number of open issues (127, at the time of filing #2759), and the paging function of gh CLI
+Obtain virtually all open issues at once. If the number of open issues increases to nearly 1000, this value should be increased further.
 
-### 2. Select an unblocked issue
+If `gh` cannot be used (such as ClaudeCodeWeb, `gh issue list` fails with `HTTP 403` etc.)
+Falling back to GitHub MCP tools (pattern established in `xp_issue2md` <#3204>. #3215):
+
+```
+mcp__github__list_issues（owner, repo, state: OPEN, fields: [number, title, labels, created_at, body], perPage: 100）
+  → 1ページ最大100件。pageInfo.hasNextPage が true の間、after にそのページの endCursor を渡して呼び出しを繰り返し、全オープンイシューを取得する
+```
+
+**Normalization of obtained results:** The differences in field names between `gh` CLI (`--json`) and MCP are as follows. The following steps (2-3) are
+Treat it so that it can be referenced by any of the normalized names (`number` / `title` / `labels` / `createdAt or created_at` / `body`):
+
+| Normalization fields | gh CLI (`--json`) | GitHub MCP fallback |
+|---|---|---|
+| number | `number` | `list_issues` of `number` || title | `title` | `title` of `list_issues` |
+| labels | `labels[].name` | `labels` of `list_issues` (string array; use `.name` only when the element is an object) |
+| createdAt | `createdAt` | `created_at` of `list_issues` |
+body | `body` | `list_issues` of `body` |
+
+Retrieve all items at once and process them in priority/FIFO order using subsequent selection logic.
+`task` Preferential acquisition by label has been abolished. Priority (Emergency > PriorityHigh > Normal) + FIFO is the only selection criterion.
+
+### 2. Select unblocked issues
 
 #### 2-1. Basic filter
 
-Exclude candidates that meet any of the following conditions:
+Exclude items to be skipped under the following conditions:
 
-- The labels include `backlog`, `block`, or `ignore` → skip (`ignore` means a deliberate suggestion to ignore, `backlog` means the work is postponed, `block` means a temporary hold)
-- Detect the current environment (the `CLAUDE_CODE_ENV` environment variable, or `ClaudeCodeWeb` as the default when unset)
-  - If the issue carries an `env/*` label, skip it unless that label matches the current environment
-  - Supported labels: `env/Termux`, `env/ClaudeCodeWeb`, `env/Codespace`, `env/Windows`
-  - If there is no `env/*` label, treat the issue as runnable in any environment
+- Label contains `backlog`, `block`, or `ignore` → Skip (`ignore` is a suggestion to consciously ignore, `backlog` is a work postponement, `block` is a temporary block)
+- Detect the current environment (`CLAUDE_CODE_ENV` environment variable, or default if unset: `ClaudeCodeWeb`)
+  - If the issue is labeled `env/*`, skip if it does not match the current environment
+  - Compatible labels: `env/Termux`, `env/ClaudeCodeWeb`, `env/Codespace`, `env/Windows`
+  - `env/*` If there is no label, consider it executable in any environment
 
-#### 2-2. Priority-bucket classification and FIFO sort
+#### 2-2. Priority bucket classification and FIFO sorting
 
-Classify the issues that passed the filter into three buckets:
+Sort the issues that passed the filter into the following three buckets:
 
 | Bucket | Condition |
 |----------|------|
-| `emergency` | Has the `Emergency` label |
-| `high` | Has the `PriorityHigh` label |
-| `normal` | Neither of the above |
+| `emergency` | `Emergency` Labeled |
+| `high` | `PriorityHigh` Labeled |
+| `normal` | None of the above |
 
-Within each bucket, sort by issue number in **ascending** order (the smaller number — i.e. the oldest — takes priority: FIFO). `gh issue list` returns results in descending order of last update, so **you must always re-sort by number**.
+Within each bucket, sort by issue number **ascending order** (smaller number takes priority = oldest first/FIFO).
+The return order of `gh issue list` is descending order of update date and time, so **be sure to re-sort by number**.
 
-#### 2-3. Evaluate candidates in order and select one
+#### 2-3. Evaluate candidate issues in order and select one
 
-Process the buckets in the order `emergency` → `high` → `normal`, and within each bucket evaluate candidates one at a time in ascending number order (oldest first).
+Process the buckets in the order `emergency` → `high` → `normal`,
+Within each bucket, candidates are evaluated one by one in ascending numerical order (oldest first).
 
 **Evaluation procedure (for each candidate issue):**
 
@@ -78,127 +114,142 @@ Process the buckets in the order `emergency` → `high` → `normal`, and within
 gh issue view <issue_number> --json comments --repo <owner>/<repo>
 ```
 
-Find the **most recent** comment containing `[ProjectStatus: InProgress]` among the comments.
+If `gh` cannot be used (such as ClaudeCodeWeb), use `mcp__github__issue_read` (method: `get_comments`, issue_number,
+perPage: 100. When it reaches 100, increase `page` by 1 and fall back to get all the results. Appears in subsequent B and CThe same type of "batch issue comment retrieval" also uses the same fallback (comment body is `comments[].body`,
+The posting date and time will be treated as `comments[].created_at`. `gh --json` of `comments[].body` / `comments[].createdAt` and
+The content will be the same).
 
-- **No such comment** → not InProgress (proceed to the next check)
-- The comment was posted **within the last hour** → skip to the next candidate (being processed by another thread)
-- The comment was posted **more than an hour ago** → InProgress is stale (treat the earlier processing as having stopped); pass this check and continue
-- If fetching the comments fails, this check may be skipped
+Find the **latest** comments containing `[ProjectStatus: InProgress]` from the comment list.
 
-**B. `depends_on` check**
+- **No applicable comment** → No InProgress (Go to next check)
+- The date and time of the comment was posted within **one hour** → Skip to next candidate (processing in another thread)
+- The comment was posted more than 1 hour ago** → InProgress is invalid (old processing is considered stopped). Pass the check and proceed
+- You can skip this check if comment acquisition fails.
 
-Extract the dependency issue number(s) from the issue body's `## Dependencies` section. This covers both an explicit field such as `depends_on: #<number>` and a natural-language reference such as `#<number>` inside a sentence like "start this task only after #<number> is done." For older-style issues without a `depends_on:` field, treat every `#<number>` inside the section as a dependency. If one or more dependencies are found:
+**B. `depends_on` Check**
+
+Extract the dependent issue number from the `## 依存関係` section of the issue body.
+This includes both explicit fields such as `depends_on: #<番号>` and `#<番号>` references in natural sentences such as "This task should begin after #<number> is completed." Even in old-style issues without the `depends_on:` field, all `#<数字>` in the section are treated as dependencies.
+If one or more dependencies are found:
 
 ```bash
-gh issue view <depends_on number> --json comments --repo <owner>/<repo> \
+gh issue view <depends_on番号> --json comments --repo <owner>/<repo> \
   | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); bodies=[c.get('body','') for c in cs]; print('GREEN') if any('[Auditor GREEN]' in b or '[Auditor doc OK]' in b for b in bodies) else None"
 ```
 
-- If `[Auditor GREEN]` is found, treat the dependency as resolved. If the dependency is a `spec_update` task (one that only passes through `xp_doc_spec` → `xp_Auditor doc`, so `[Auditor GREEN]` is structurally never emitted), judge instead by the presence of `[Auditor doc OK]` (the two markers are mutually exclusive, so it's fine to check for both without first determining the dependency's type)
-- If neither marker is found → still blocked → skip to the next candidate
-- **Do not look at GitHub's closed status** (even if closed, the issue is still considered blocking unless `[Auditor GREEN]` / `[Auditor doc OK]` is present)
+(If `gh` cannot be used, use the same MCP fallback as A)
 
-**C. Architected-issue check**
+- If `[Auditor GREEN]` is found, the dependency is considered resolved. If the dependent is a `spec_update` task (passes only `xp_doc_spec` → `xp_Auditor doc`, and `[Auditor GREEN]` is not output structurally), it is determined by the presence or absence of `[Auditor doc OK]` (both markers are exclusive, so you can check both without determining the type of the dependent separately)
+- If neither is found, it is blocked → Skip to the next candidate
+- **Don't check GitHub's close status** (Even if it is closed, it will be blocked if `[Auditor GREEN]` / `[Auditor doc OK]` is not present)
 
-For the issue you're about to select as a candidate, check its comments regardless of its title type (`[Story]` / `[Task]` / `[Bug]` / no tag) — a `[Task]` issue can also have been decomposed by Architect via the observable-change gate. Do not judge by the presence of sub-issues, since related tasks are sometimes manually linked to sub-issues as a matter of operational practice:
+**C. Architected issue check**
+
+Check the comments for the issue you tried to make a candidate, regardless of the title type (`[Story]` / `[Task]` / `[Bug]` / no tag)
+(`[Task]` Issues may also be decomposed into Architect via observable change gates.
+It is not determined based on the presence or absence of sub-issues (because related tasks are manually linked to sub-issues):
 
 ```bash
 gh issue view <issue_number> --json comments --repo <owner>/<repo> \
-  | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); print(sum(1 for c in cs if '[Parent branch created]' in c.get('body','') or '[親ブランチ作成済み]' in c.get('body','')))"
+  | python3 -c "import json,sys; cs=json.load(sys.stdin).get('comments',[]); print(sum(1 for c in cs if '[親ブランチ作成済み]' in c.get('body','')))"
 ```
 
-- **Neither** `[Parent branch created]` **nor** `[親ブランチ作成済み]` **is present** → select it as a normal candidate (go to step D)
-- **Either marker is present** → treat it as an **Architected issue** and delegate to its subtasks:
+(If `gh` cannot be used, use the same MCP fallback as A)
+
+- `[親ブランチ作成済み]` is **missing** → Select it as a normal candidate (go to step D)
+- `[親ブランチ作成済み]` is **existed** → Delegated to subtask as **Architected issue**:
 
   **Subtask delegation flow:**
-  1. Fetch the list of sub-issues for this Story.
-     Since `gh` CLI's `--json subIssues` is unsupported, fetch it via the MCP tool instead:
+  1. Get a list of sub-issues for this Story:
+     `gh` CLI's `--json subIssues` is not supported, so obtain it via MCP tool:
      - tool: `mcp__github__issue_read`
-     - method: `get_sub_issues`
-     - issue_number: `<story number>`
-  2. For each sub-issue, narrow down the candidates by checking:
-     - No `backlog` / `block` label
-     - `env` label matches (or no `env` label at all)
-     - Not InProgress (the most recent `[ProjectStatus: InProgress]` comment either **doesn't exist**, or was posted **more than an hour ago**)
-     - `depends_on` resolved (`[Auditor GREEN]` present — but if the dependency is a `spec_update` task, identified by "spec update" in the title or `task_type: spec_update` in the body, then `[Auditor doc OK]` present instead)
-  3. Sort the eligible sub-issues by issue number in **ascending** order and select the oldest
-  4. If there are zero eligible sub-issues:
-     - Check the comments on every sub-issue
-     - The completion marker for each sub-issue is `[Auditor GREEN]` for a normal task, or `[Auditor doc OK]` for a `spec_update` task (identified by "spec update" in the title or `task_type: spec_update` in the body — a `spec_update` task only passes through `xp_doc_spec` → `xp_Auditor doc`, so `[Auditor GREEN]` is structurally never emitted)
-     - If every sub-issue satisfies its applicable completion marker → call `xp_Director <story number>` and delegate to the AllGREEN completion flow
-     - If any sub-issue is still missing its applicable completion marker → hold this Story as having incomplete sub-issues, and return to candidate evaluation
+     - method: `get_sub_issues`- issue_number: `<story番号>`
+  2. Narrow down the candidates by checking the following for each sub-issue:
+     - `backlog` / `block` No label
+     - env label matching (or no env label)
+     - Not InProgress (the most recent `[ProjectStatus: InProgress]` comment **doesn't exist** or **more than 1 hour has passed** since it was posted)
+     - `depends_on` has been resolved (`[Auditor GREEN]` exists. However, if the dependent task is `spec_update` (title is "Functional specification update" or body is `task_type: spec_update`), `[Auditor doc OK]` is present)
+  3. Sort the active subissues by issue number **ascending** and select the oldest one
+  4. If there are zero active subissues:
+     - Check comments for all sub-issues
+     - The completion marker for each sub-issue should be `[Auditor GREEN]` for normal tasks, `spec_update` for tasks (with "Functional Specification Update" in the title or `task_type: spec_update` in the body) and `[Auditor doc OK]` (for `spec_update` tasks) `xp_doc_spec` → `xp_Auditor doc` only is passed, `[Auditor GREEN]` is not output structurally)
+     - All sub-issues meet the corresponding completion marker → Call `xp_Director <ストーリー番号>` and delegate to AllGREEN completion flow
+     - There are unfinished sub-issues that do not meet the corresponding completion marker → This Story will be held as having unfinished sub-issues and return to candidate evaluation
 
-**D. Confirm the selection**
+**D. Confirm selection**
 
-Select the issue (or the sub-issue delegated from a Story) that passed all of the above checks.
+Select the issue (or sub-issue delegated from Story) that passes all of the above checks.
 
 ---
 
-### 3. Workflow routing
+### 3. Workflow distribution
 
-Check the selected issue's title, labels, and body, and run one of the following workflows:
+Check the title, label, and body of the selected issue, then perform one of the following workflows:
 
-#### Workflow 1: NovelGenerator workflow
+#### Workflow 1: NovelGenerator Workflow
 
-**Match conditions:**
-- The labels include `epic/AINovelGenerator`
-- The title or body mentions "novel," "episode," "NovelGenerator," etc.
-
-**Processing:**
-Call NovelGeneratorRun:
-```
-/NovelGeneratorRun <issue number>
-```
-
-#### Workflow 2: The fallen-puppeteer writing series
-
-**Match conditions:**
-- The labels include `epic/ningyotsukai`
-- The title or body mentions "fallen" or "puppeteer," etc.
+**Judgment conditions:**
+- Label contains `epic/AINovelGenerator`
+- The title or text includes "novel", "episode", "NovelGenerator", etc.
 
 **Processing:**
-Does not run automatically. Treat it as manual work that follows the user's instructions. Comment on the issue and stop:
+Calling NovelGeneratorRun:
 ```
-⚠️ Detected an issue in the fallen-puppeteer writing series.
-This workflow is manual. Waiting for the user's instructions.
-Issue: #<issue number> <title>
+/NovelGeneratorRun <issue番号>
 ```
 
-#### Workflow 3: Software / skill development
+#### Workflow 2: Fallen Puppeteer Writing System
 
-**Match conditions:**
-- None of workflows 1, 2, or 4 apply
-
-**Processing:**
-Pass the issue number to `xp_Director` and delegate:
-```
-/xp_Director <issue number>
-```
-If `ProcessIssue` itself was called with `implementer=codex`, pass that flag through unchanged:
-```
-/xp_Director <issue number> implementer=codex
-```
-
-#### Workflow 4: Codex automated-review issue
-
-**Match conditions (all must hold):**
-- The title is in the format `**<sub><sub>![P1 Badge]` or `**<sub><sub>![P2 Badge]`
-- The body contains `@chatgpt-codex-connector`
+**Judgment conditions:**
+- Label contains `epic/ningyotsukai`
+- The title or text contains words such as "dropout" or "puppet master"
 
 **Processing:**
-Do not call `xp_Director`; delegate to `ProcessCodexIssue` instead (judging the finding, fixing it, opening the PR, and applying the `ignore` label are all that skill's responsibility — split out in #2907):
+Does not run automatically. Treat it as a manual task that follows user instructions.
+Comment and stop the issue:
 ```
-/ProcessCodexIssue <issue number>
+⚠️ 落ちこぼれ人形使い執筆系イシューを検出しました。
+このワークフローは手動作業です。ユーザーの指示をお待ちします。
+Issue: #<issue番号> <タイトル>
 ```
 
-**Handling consecutive Codex issues:**
-If the selected issue was a Codex issue, after `/ProcessCodexIssue` finishes, re-evaluate the next candidate using the selection logic in section 2. If that candidate is also a Codex issue, delegate to `/ProcessCodexIssue` again (consecutive processing within one session is fine). If, however, a regular software-development issue turns up in the mix, stop after one issue and check with the user.
+#### Workflow 3: Software development/skill development
+
+**Judgment conditions:**
+- If workflows 1 to 2 or 4 do not apply
+
+**Processing:**
+Pass the issue number to xp_Director and delegate:
+```
+/xp_Director <issue番号>
+```
+If ProcessIssue itself was called with `implementer=codex`, pass that flag as is:
+```
+/xp_Director <issue番号> implementer=codex
+```
+
+#### Workflow 4: Codex Auto Review Issue
+
+**Judgment conditions (if all are met):**
+- Title is in `**<sub><sub>![P1 Badge]` or `**<sub><sub>![P2 Badge]` format
+- body contains `@chatgpt-codex-connector`
+
+**Processing:**Don't call xp_Director, delegate to `ProcessCodexIssue` (judgment, correction, PR creation, and assigning ignore labels are the responsibility of the same skill. Separated in #2907):
+```
+/ProcessCodexIssue <issue番号>
+```
+
+**Processing consecutive Codex issues:**
+If the selected issue is a Codex issue, after processing `/ProcessCodexIssue`,
+Reevaluate the next candidate issue using the selection logic in Chapter 2. If it is a Codex issue, continue
+Delegate to `/ProcessCodexIssue` (can be processed continuously in one session). However, normal software development issues
+If they are mixed, stop at one and check with the user.
 
 ---
 
 ## Notes
 
-- In the normal flow (workflows 1–3), only one issue is processed per invocation
-- Codex issues (workflow 4) can still be processed consecutively, even after delegating to `ProcessCodexIssue`
+- In the normal flow (workflows 1 to 3), only one issue is processed in one execution
+- Codex issue (workflow 4) can be processed continuously even after being delegated to `ProcessCodexIssue`
 - If in doubt, ask the user
-- The only difference from `xp_Director` (with no argument) is the addition of workflow-routing logic
+- The only difference from `xp_Director` (no argument) is the addition of distribution logic

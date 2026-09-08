@@ -1,7 +1,7 @@
 ---
 issue: 400
 title: "[Task] ProcessIssue スキル新設"
-state: open
+state: closed
 labels: [task, epic/SoloXP]
 author: noragrammer-crypto
 created_at: 2026-03-23T06:29:28Z
@@ -20,7 +20,7 @@ epic: SoloXP
 3つのワークフロー振り分けロジック:
 1. **NovelGeneratorワークフロー** → `NovelGeneratorRun` を呼び出す
 2. **落ちこぼれ人形使い執筆系イシュー** → 手動作業（ユーザー指示に従う）。自動実行しない
-3. **ソフトウェア開発・スキル開発系** → `/xp_Director <issue_number>` を呼び出す
+3. **ソフトウェア開発・スキル開発系** → `/xp_Director ` を呼び出す
 
 ### 位置づけ
 - `/xp_Director`（引数なし）の後継・移行先
@@ -87,10 +87,24 @@ epic: SoloXP
 テストファイル: `SoloXP/__tests__/process-issue-skill.unit.test.js`
 結果: PASS 0件 / FAIL 11件（SKILL.md 未作成のため RED は正しい状態）
 
+命題チェック:
+- [ ] SKILL.md ファイルが存在する（FAIL: ファイル未作成）
+- [ ] コマンド定義セクションが含まれる（FAIL: ファイル未作成）
+- [ ] 役割・目的セクションが含まれる（FAIL: ファイル未作成）
+- [ ] 処理フロー・手順セクションが含まれる（FAIL: ファイル未作成）
+- [ ] オープンイシューリスト取得ロジックがある（FAIL: ファイル未作成）
+- [ ] 未ブロックイシューの選択指示がある（FAIL: ファイル未作成）
+- [ ] NovelGeneratorワークフロー振り分けがある（FAIL: ファイル未作成）
+- [ ] 落ちこぼれ人形使い執筆系の振り分けがある（FAIL: ファイル未作成）
+- [ ] 落ちこぼれ人形使い執筆系は手動実行指示がある（FAIL: ファイル未作成）
+- [ ] ソフトウェア開発系の xp_Director 振り分けがある（FAIL: ファイル未作成）
+- [ ] xp_Director 呼び出し時に issue 番号を渡す指示がある（FAIL: ファイル未作成）
+
 ### Functional Test
 テストファイル: `SoloXP/__tests__/process-issue-skill.functional.test.js`
 結果: PASS 0件 / FAIL 6件（SKILL.md 未作成のため RED は正しい状態）
 
+---
 スキップ: E2E — スキルファイル定義タスクのため E2E は不要
 
 [Tester完了]
@@ -141,5 +155,37 @@ PASS: 17件 / テストコマンド: `npx jest --testPathPattern='process-issue-
 ### noragrammer-crypto — 2026-03-23T06:52:23Z
 
 [Documenter実行中]
+
+---
+
+### noragrammer-crypto — 2026-03-23T06:55:00Z
+
+[Documenter完了]
+
+## ドキュメント生成完了
+
+生成・更新したファイル:
+- `SoloXP/docs/issues/issue-400.MD`: イシューアーカイブ
+- `SoloXP/docs/spec/process_issue.md`: ProcessIssue スキル機能仕様書（新規）
+- `SoloXP/docs/spec/README.md`: 索引に ProcessIssue を追加
+- `SoloXP/docs/tests/E2ETests/issue-397-process-issue-commands.md`: E2Eテストドキュメント
+
+---
+
+### noragrammer-crypto — 2026-03-23T06:55:11Z
+
+[Auditor ドキュメントチェック中]
+
+---
+
+### noragrammer-crypto — 2026-03-23T06:55:44Z
+
+[PR発行済み #403]
+
+### ドキュメントチェック結果
+- spec/README.md: OK（ProcessIssue を索引に追加済み）
+- spec/process_issue.md: OK（コマンド・処理フロー・振り分けロジック・xp_Director との関係を記載）
+- docs/issues/issue-400.MD: OK（イシューアーカイブ作成済み）
+- tests/E2ETests/issue-397-process-issue-commands.md: OK（E2Eテストシナリオ15件を記録）
 
 ---

@@ -1,7 +1,14 @@
 # XP Planner Skill
 
-## overview
-A skill that reads XP story cards (Markdown), decomposes tasks and estimates costs, and writes the results back as frontmatter YAML.
+> **Current status (as of 2026-08)**: In the current operation flow (originating from GitHub Issue, see `SoloXP/WORKFLOW.md`)
+> Automatic calls from `xp_Architect` are not made. Originally iterated on Markdown story cards
+> This is a remnant of the old system of managing plans, and currently issues are placed on GitHub and triaged by labels.
+> The operation has been switched to executing the iteration plan (Details: #2965). Manual tasks based on StoryCard
+> Leave it only as a means of execution when you want to disassemble and estimate.
+
+## Overview
+Load XP story cards (Markdown), decompose tasks and estimate costs,
+Skill that writes the results back as frontmatter YAML.
 
 ## Command
 
@@ -35,48 +42,49 @@ Specify dependencies (blocks) for each task:
 - Can be omitted if there is no dependency
 
 For each task, specify the story acceptance conditions that this task verifies:
-- Write the ID of the acceptance criteria of the story or the wording of the relevant part in `verifies`
-- Tasks that are not tied to any acceptance conditions (internal refactors, preparation work, etc.) should be clearly indicated as `verifies: none (reason)`
-- `verifies` is a required item for all tasks. Cannot be omitted
+- Write the story acceptance criteria ID or relevant text in `verifies`
+- Tasks that are not linked to any acceptance conditions (internal refactoring, preparation work, etc.) should be clearly marked as `verifies: none（理由）`
+- `verifies` is a required field for all tasks. Cannot be omitted
 
 ### 3. Cost estimation
-Assign story points (pt) to each task. The basis for the estimate should also be briefly recorded.
+Assign story points (pt) to each task.
+The basis for the estimate should also be briefly recorded.
 
 ### 4. Write back to frontmatter
 
 #### First run
 ```yaml
 ---
-title: <title>
-epic: <epic name (estimated or user specified)>
+title: <タイトル>
+epic: <エピック名（推定またはユーザー指定）>
 status: backlog
 estimate:
-  total: <total pt>
+  total: <合計pt>
   breakdown:
-    - task: <task name>
+    - task: <タスク名>
       pt: <pt>
-      note: <Reason/concerns>
-      depends_on: <task name or issue number that must be completed before this task (if not, omit)>
-      verifies: <ID/statement of the acceptance condition that this task satisfies. If there is no link, none (reason)>
+      note: <根拠・懸念点>
+      depends_on: <このタスクの前に完了が必要なタスク名またはイシュー番号（なければ省略）>
+      verifies: <このタスクが満たす受け入れ条件のID/文。紐づかない場合は none（理由）>
 estimate_history:
   - date: <YYYY-MM-DD>
-    total: <total pt>
-    reason: initial estimate
+    total: <合計pt>
+    reason: 初期見積もり
 ---
 ```
 
-#### `--reestimate` time
+#### `--reestimate` hours
 - Overwrite `estimate` with new estimate
 - Add to `estimate_history` (do not overwrite)
 
 ```yaml
 estimate_history:
-  - date: <old date>
-    total: <old pt>
-    reason: <old reason>
-  - date: <new date>
-    total: <new pt>
-    reason: <reason for re-estimate>
+  - date: <旧日付>
+    total: <旧pt>
+    reason: <旧理由>
+  - date: <新日付>
+    total: <新pt>
+    reason: <再見積もり理由>
 ```
 
 ---
@@ -86,17 +94,17 @@ estimate_history:
 After execution, print the following to the console:
 
 ```
-## Task decomposition result
+## タスク分解結果
 
-| Task | pt | Notes | Depends | verifies |
+| タスク | pt | 備考 | 依存 | verifies |
 |--------|-----|------|------|------|
-| Design | 2 | API specification confirmation required | None | none (design confirmation only) |
-| Implementation | 5 | ... | After design completion | AC-1 |
-| Test | 2 | ... | After implementation | AC-1, AC-2 |
+| 設計   | 2  | API仕様確認が必要 | なし | none（設計確認のみ） |
+| 実装   | 5  | ... | 設計完了後 | AC-1 |
+| テスト | 2  | ... | 実装完了後 | AC-1, AC-2 |
 
-Total: 9pt
+合計: 9pt
 
-Updated story cards: StoryCards/backlog/xxx.md
+ストーリーカードを更新しました: StoryCards/backlog/xxx.md
 ```
 
 ---
@@ -105,9 +113,9 @@ Updated story cards: StoryCards/backlog/xxx.md
 
 ```
 api/<EpicName>/stories/
-backlog/ # not started
-in_progress/ # Under implementation (GitHub Issue already)
-done/ # done
+  backlog/      # 未着手
+  in_progress/  # 実装中（GitHub Issue化済み）
+  done/         # 完了
 ```
 
 - Snake case file name recommended: `persona_setting.md`
@@ -118,7 +126,7 @@ done/ # done
 ## Linkage command
 
 - `/xp_Architect <story_issue_number>` : Publish sub-issue from story issue
-- `/xp_move <storycard_path> <status>` : Move story card between folders
+- `/xp_move <storycard_path> <status>` : Move story cards between folders
 
 ---
 
@@ -126,4 +134,4 @@ done/ # done
 
 - Ask user if epic name is unknown
 - Estimates are estimates only. Assumed to change during implementation
-- `--reestimate` is only used for intentional re-evaluation (does not run automatically)
+- `--reestimate` is used only for intentional re-evaluation (does not execute automatically)

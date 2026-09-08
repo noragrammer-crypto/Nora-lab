@@ -80,6 +80,14 @@ XPスキルズワークフローを振り返り、
 
 ---
 
+## GitHub アクセス方法・MCPフォールバック
+
+イシュー・PRログ取得（`gh issue list` / `gh pr list`）は、`gh` が使えない環境（ClaudeCodeWeb等）では
+`mcp__github__list_issues` / `mcp__github__list_pull_requests`（いずれもページングして200件相当まで取得）
+にフォールバックする（`xp_issue2md`〈#3204〉で確立したパターン。#3217）。
+
+---
+
 ## 注意事項
 
 - 指摘は事実ベースで。イシューログに記録がない推測は含めない
