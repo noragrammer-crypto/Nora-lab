@@ -62,6 +62,28 @@
 
 ---
 
+### 4. gh 失敗時のフォールバック（#3220 / #3265）
+
+**シナリオ概要**: `FAKE_GH_FAIL` 環境変数（`fixtures/bin/gh` 拡張、#3220）で `gh` サブコマンド単位の
+疑似失敗（`HTTP 403`相当）を注入し、クラッシュせず適切な終端アクションを返すことを検証する
+
+| ステップ | 種別 | 内容 |
+|---|---|---|
+| Given | 前提 | `FAKE_GH_FAIL` に失敗させたいサブコマンド名（`pr-list`/`pr-view`/`issue-list`/`issue-create`）を指定する |
+| Then | 検証 | `findLatestMergedPR`（`gh pr list`）失敗時: 例外で落ちず `skipped-gh-unavailable` を返す |
+| Then | 検証 | `getHotspotComment`（`gh pr view`）失敗時: 例外で落ちず `skipped-gh-unavailable` を返す |
+| Then | 検証 | `issueExistsForFile`（`gh issue list`）失敗時: 重複不明のまま fail-open で `gh issue create` を試行し `created` を返す |
+| Then | 検証 | `createAlertIssue`（`gh issue create`）失敗時: 例外で落ちず `gh-failed` を返す |
+| Then | 検証 | `--repo` 省略時、`detectRepo`（`gh repo view`）失敗時: 例外で落ちず `skipped-gh-unavailable` を返す（Codexレビュー指摘 #3271） |
+
+実装タスク #3265（`report-post-failure.js` と同じ「gh優先→失敗時フォールバック→構造化戻り値」
+パターンの適用）により GREEN 化済み。`Nora-lab/tools/CodeCompass/` の同型コピーにも同一実装・
+同一テストを適用済み（旧 `execSync`＋文字列組み立て実装だった乖離もこの機会に解消した）。
+PR #3271 の Codex レビューで `detectRepo()`（`--repo` 省略時のリポジトリ自動検出）が
+同じ gh フォールバックパターンから漏れていた指摘を受け、追加修正・追加テストを適用済み。
+
+---
+
 ## カバレッジサマリー
 
 | 受け入れ条件 | テスト数 | 状態 |
@@ -74,5 +96,6 @@
 | PRなし時は起票しない | 1 | ✅ |
 | dry-run時は起票しない | 1 | ✅ |
 | 存在確認 | 2 | ✅ |
+| gh失敗時のフォールバック（#3220） | 5 | ✅ |
 
-合計: 17件 — 全 GREEN（実装タスク #1548 完了により RED → GREEN に移行）
+合計: 22件 — 全22件 GREEN（実装タスク #1548・#3265 完了分、Codexレビュー指摘対応分含む）

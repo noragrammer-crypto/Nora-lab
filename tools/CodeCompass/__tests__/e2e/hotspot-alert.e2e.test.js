@@ -204,4 +204,100 @@ describe('Story #1546: CodeCompassホットスポット検出→Issue自動起�
       expect(log).not.toMatch(/gh issue create/);
     });
   });
+
+  describe('受け入れ条件（#3220）: gh 失敗時のフォールバック（クラッシュしない）', () => {
+    function runScriptWithFail(scenario, failCommands, extraArgs = '') {
+      const logPath = fs.mkdtempSync(path.join(os.tmpdir(), 'fake-gh-log-')) + '/log.txt';
+      fs.writeFileSync(logPath, '');
+
+      let stdout;
+      let error = null;
+      try {
+        stdout = execSync(
+          `node "${SCRIPT_PATH}" --branch=main --threshold=1 --repo=owner/repo ${extraArgs}`,
+          {
+            cwd: ROOT,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              PATH: `${FAKE_GH_BIN_DIR}:${process.env.PATH}`,
+              FAKE_GH_SCENARIO: scenario,
+              FAKE_GH_FAIL: failCommands,
+              FAKE_GH_LOG: logPath,
+            },
+          }
+        );
+      } catch (err) {
+        error = err;
+      }
+
+      const log = fs.readFileSync(logPath, 'utf8');
+      return { stdout, error, log };
+    }
+
+    /**
+     * `--repo` を渡さず detectRepo()（gh repo view）経由でのフォールバックを検証する
+     * （Codexレビュー指摘 #3271: detectRepo は main() の runHotspotAlert 呼び出しより前に
+     * あるため、他の gh 呼び出しとは別経路でテストする必要がある）。
+     */
+    function runScriptWithoutRepoArg(scenario, failCommands) {
+      const logPath = fs.mkdtempSync(path.join(os.tmpdir(), 'fake-gh-log-')) + '/log.txt';
+      fs.writeFileSync(logPath, '');
+
+      let stdout;
+      let error = null;
+      try {
+        stdout = execSync(
+          `node "${SCRIPT_PATH}" --branch=main --threshold=1`,
+          {
+            cwd: ROOT,
+            encoding: 'utf8',
+            env: {
+              ...process.env,
+              PATH: `${FAKE_GH_BIN_DIR}:${process.env.PATH}`,
+              FAKE_GH_SCENARIO: scenario,
+              FAKE_GH_FAIL: failCommands,
+              FAKE_GH_LOG: logPath,
+            },
+          }
+        );
+      } catch (err) {
+        error = err;
+      }
+
+      const log = fs.readFileSync(logPath, 'utf8');
+      return { stdout, error, log };
+    }
+
+    it('findLatestMergedPR（gh pr list）が失敗しても例外で落ちず skipped-gh-unavailable を返す', () => {
+      const { stdout, error } = runScriptWithFail('above-threshold-no-duplicate', 'pr-list');
+      expect(error).toBeNull();
+      expect(stdout).toMatch(/skipped-gh-unavailable/);
+    });
+
+    it('getHotspotComment（gh pr view）が失敗しても例外で落ちず skipped-gh-unavailable を返す', () => {
+      const { stdout, error } = runScriptWithFail('above-threshold-no-duplicate', 'pr-view');
+      expect(error).toBeNull();
+      expect(stdout).toMatch(/skipped-gh-unavailable/);
+    });
+
+    it('issueExistsForFile（gh issue list）が失敗しても重複不明のまま作成を試行する（fail-open）', () => {
+      const { stdout, log, error } = runScriptWithFail('above-threshold-no-duplicate', 'issue-list');
+      expect(error).toBeNull();
+      expect(stdout).toMatch(/created/);
+      expect(log).toMatch(/gh issue create/);
+    });
+
+    it('createAlertIssue（gh issue create）が失敗しても例外で落ちず gh-failed を返す', () => {
+      const { stdout, error } = runScriptWithFail('above-threshold-no-duplicate', 'issue-create');
+      expect(error).toBeNull();
+      expect(stdout).toMatch(/gh-failed/);
+    });
+
+    it('--repo 省略時、detectRepo（gh repo view）が失敗しても例外で落ちず skipped-gh-unavailable を返す（Codexレビュー指摘 #3271）', () => {
+      const { stdout, error } = runScriptWithoutRepoArg('above-threshold-no-duplicate', 'repo-view');
+      expect(error).toBeNull();
+      expect(stdout).toMatch(/skipped-gh-unavailable/);
+    });
+  });
 });

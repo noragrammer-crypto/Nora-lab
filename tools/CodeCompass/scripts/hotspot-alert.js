@@ -32,14 +32,31 @@ function parseArgs(argv) {
   return args;
 }
 
+/**
+ * `--repo` 省略時のリポジトリ自動検出。gh失敗時は例外を投げず null を返す
+ * （lib/hotspot-alert.js の各関数と同じ「gh優先→失敗時フォールバック」パターン。#3220/#3265
+ * レビュー指摘: ここで例外を投げると main() 全体がクラッシュし、以降の gh 失敗フォールバックに
+ * 到達できない）。
+ *
+ * @returns {string|null}
+ */
 function detectRepo() {
-  const out = execSync('gh repo view --json nameWithOwner', { encoding: 'utf8' });
-  return JSON.parse(out).nameWithOwner;
+  try {
+    const out = execSync('gh repo view --json nameWithOwner', { encoding: 'utf8' });
+    return JSON.parse(out).nameWithOwner;
+  } catch (err) {
+    return null;
+  }
 }
 
 function main(argv) {
   const { branch, threshold, repo: repoArg, dryRun } = parseArgs(argv);
   const repo = repoArg || detectRepo();
+
+  if (!repo) {
+    process.stdout.write('skipped-gh-unavailable file=null hotspotScore=null\n');
+    return;
+  }
 
   const result = runHotspotAlert({ branch, threshold, repo, dryRun });
 

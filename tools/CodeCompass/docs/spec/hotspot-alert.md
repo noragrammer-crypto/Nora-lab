@@ -102,12 +102,18 @@ PR コメント本文中の `| file | hotspotScore | complexity | changes | loc 
 `gh pr list --repo <repo> --base <branch> --state merged --limit 1 --json number` を実行し、
 見つかった PR 番号を返す。なければ `null`。
 
+バッチ文脈の必須読み取りで代替値がないため、`gh` 失敗時は `ghUnavailable: true` タグ付きエラーを
+再送出する（#3220）。呼び出し元 `runHotspotAlert` はこれを検出して `action: 'skipped-gh-unavailable'`
+で処理を打ち切る。
+
 ---
 
 ### getHotspotComment({ prNumber, repo })
 
 `gh pr view <prNumber> --repo <repo> --json comments` を実行し、
 本文が `/^## CodeCompass Hotspots/m` にマッチする最新コメントの body を返す。なければ `null`。
+
+`findLatestMergedPR` と同様、`gh` 失敗時は `ghUnavailable: true` タグ付きエラーを再送出する（#3220）。
 
 ---
 
@@ -116,13 +122,19 @@ PR コメント本文中の `| file | hotspotScore | complexity | changes | loc 
 `gh issue list --repo <repo> --state open --search "codecompass-hotspot-alert:file=<file> in:body"`
 を実行し、1件以上見つかれば `true`（重複起票防止）。
 
+重複チェック（読み取り）のため、`gh` 失敗時は例外を投げず「重複不明→作成続行」で fail-open する
+（`false` を返す。重複を見逃すより誤って抑制する方が実害が大きいため。#3220）。
+
 ---
 
 ### createAlertIssue({ file, hotspotScore, evidence, repo, prNumber })
 
-`gh issue create` を `child_process.execSync` 経由で実行する
-（`lib/codecompass-to-issues.js` の `createIssues` と同じパターン）。
+`gh issue create` を `child_process.execFileSync('gh', args)` 経由で実行する。
+すべての `gh` 呼び出しは引数配列を使用し、file・repo 等に含まれるシェルメタ文字を展開しない。
 ラベル: `enhancement,codecompass-detected`
+
+書き込み操作のため、`gh` 失敗時は例外を投げず `{ action: 'gh-failed', file, hotspotScore, evidence, prNumber }`
+を返し、判断を呼び出し元に委ねる（`SocialMediaAgent/lib/report-post-failure.js` と同じパターン。#3220）。
 
 ---
 
@@ -133,10 +145,25 @@ PR コメント本文中の `| file | hotspotScore | complexity | changes | loc 
 **返り値**
 
 ```json
-{ "action": "created" | "skipped-below-threshold" | "skipped-duplicate" | "skipped-no-data", "file": "...", "hotspotScore": 0 }
+{ "action": "created" | "skipped-below-threshold" | "skipped-duplicate" | "skipped-no-data" | "skipped-gh-unavailable" | "gh-failed", "file": "...", "hotspotScore": 0 }
 ```
 
+- `skipped-gh-unavailable`（#3220）: 必須読み取り（`findLatestMergedPR` / `getHotspotComment`）が
+  `gh` 失敗で終端した場合
+- `gh-failed`（#3220）: `createAlertIssue` の起票失敗をそのまま伝播した場合
+
 `dryRun: true` の場合は `createAlertIssue` を呼ばず判定結果のみ返す。
+
+### gh 失敗時のフォールバック設計（#3220）
+
+`.github/workflows/hotspot-alert.yml`（`GH_TOKEN` あり）以外の経路で本モジュールが呼ばれる場合
+（手動実行等）に備えた防御的改善。役割ごとに方針を分ける：
+
+| 関数 | 役割 | gh失敗時の挙動 |
+|---|---|---|
+| `findLatestMergedPR` / `getHotspotComment` | バッチ文脈の必須読み取り（代替値なし） | `ghUnavailable` エラーを再送出 → `skipped-gh-unavailable` |
+| `issueExistsForFile` | 重複チェック（読み取り） | fail-open（`false` を返す。重複不明→作成続行） |
+| `createAlertIssue` | 書き込み | `{action: 'gh-failed', ...}` を返す（例外を投げない） |
 
 ---
 
@@ -149,7 +176,8 @@ node CodeCompass/scripts/hotspot-alert.js \
   [--branch=main] [--threshold=1] [--repo=owner/repo] [--dry-run]
 ```
 
-- `--repo` 省略時は `gh repo view --json nameWithOwner` で自動検出する
+- `--repo` 省略時は `gh repo view --json nameWithOwner` で自動検出する。`gh` 失敗時は例外を
+  投げず `skipped-gh-unavailable` を出力して終了する（#3220/#3271）
 - データソースは `gh` CLI 経由の PR コメントのみ（ローカルの `git log`/AST解析はしない。
   ClaudeCode Web のシャロークローン環境でも正しく動作させるための設計。#1541 を踏まえる）
 - 実行結果（`action file=... hotspotScore=...`）を stdout に出力する
@@ -157,13 +185,16 @@ node CodeCompass/scripts/hotspot-alert.js \
 ### 動作フロー
 
 ```
+--repo 省略時: detectRepo()（gh repo view）
+  → gh失敗: skipped-gh-unavailable（#3220/#3271。ここで例外を投げず main() 全体のクラッシュを防ぐ）
 findLatestMergedPR(branch)
-  → 見つからない: skipped-no-data
+  → gh失敗: skipped-gh-unavailable（#3220） / 見つからない: skipped-no-data
 getHotspotComment(prNumber)
-  → コメントなし: skipped-no-data
+  → gh失敗: skipped-gh-unavailable（#3220） / コメントなし: skipped-no-data
 parseHotspotTable(commentBody) → evaluateTopHotspot(rows, threshold)
   → shouldAlert=false: skipped-below-threshold
 issueExistsForFile(top.file)
-  → 重複あり: skipped-duplicate
-dryRun でなければ createAlertIssue() → created
+  → gh失敗: fail-open で続行（#3220） / 重複あり: skipped-duplicate
+dryRun でなければ createAlertIssue()
+  → gh失敗: gh-failed（#3220） / 成功: created
 ```

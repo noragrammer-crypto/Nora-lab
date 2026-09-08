@@ -14,17 +14,29 @@ const log = process.env.FAKE_GH_LOG;
 if (log) fs.appendFileSync(log, `gh ${args.join(' ')}\n`);
 
 const scenario = process.env.FAKE_GH_SCENARIO || 'above-threshold-no-duplicate';
+// カンマ区切りで gh サブコマンド名（pr-list / pr-view / issue-list / issue-create）を指定すると、
+// そのサブコマンドだけ `HTTP 403` で失敗させる（#3220: gh失敗時のフォールバック検証用）。
+const failCommands = (process.env.FAKE_GH_FAIL || '').split(',').map((s) => s.trim()).filter(Boolean);
 
 function out(obj) {
   process.stdout.write(JSON.stringify(obj) + '\n');
 }
 
+function failIfRequested(name) {
+  if (failCommands.includes(name)) {
+    process.stderr.write(`fake gh: HTTP 403 (simulated failure for ${name})\n`);
+    process.exit(1);
+  }
+}
+
 if (args[0] === 'pr' && args[1] === 'list') {
+  failIfRequested('pr-list');
   out(scenario === 'no-pr-found' ? [] : [{ number: 42 }]);
   process.exit(0);
 }
 
 if (args[0] === 'pr' && args[1] === 'view') {
+  failIfRequested('pr-view');
   const topScore = scenario === 'below-threshold' ? '0.8000' : '2.1234';
   const table = [
     '| file | hotspotScore | complexity | changes | loc | linesChanged |',
@@ -39,16 +51,19 @@ if (args[0] === 'pr' && args[1] === 'view') {
 }
 
 if (args[0] === 'issue' && args[1] === 'list') {
+  failIfRequested('issue-list');
   out(scenario === 'duplicate-exists' ? [{ number: 999 }] : []);
   process.exit(0);
 }
 
 if (args[0] === 'issue' && args[1] === 'create') {
+  failIfRequested('issue-create');
   process.stdout.write('https://github.com/owner/repo/issues/1000\n');
   process.exit(0);
 }
 
 if (args[0] === 'repo' && args[1] === 'view') {
+  failIfRequested('repo-view');
   out({ nameWithOwner: 'owner/repo' });
   process.exit(0);
 }
